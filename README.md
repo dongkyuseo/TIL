@@ -4,6 +4,6 @@
 
 ### Contents
 
-- Github
-- Python
+- [Github](https://github.com/dongkyuseo/TIL/tree/master/Github)
+- [Python](https://github.com/dongkyuseo/TIL/tree/master/Python)
 
