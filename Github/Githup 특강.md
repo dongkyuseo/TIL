@@ -90,7 +90,21 @@ $ git branch -d 브랜치이름
 - push
 - 상대방에게 pull 받아주세요
 
+## stash - 되돌리기 기능
 
+$ git stash : 임시보관
+
+$ git stash pop : 임시보관 해지
+
+모든 커밋 시점은 복원 가능
+
+로컬 작업중 온라인 변경발생시
+
+stash로 임시 저장후
+
+git pull 로 최신화 해준뒤
+
+stash pop으로 변경사항 적용 가능
 
 
 

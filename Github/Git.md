@@ -44,6 +44,13 @@
     - git log --oneline : 로컬의 파일 목록
     - git log -2--oneline : 최근 2개만 한줄로
   - esc :wq 나가는기능
+  - git restore --staged <file> : staged 에서 취소하는명령어
+  - git restore : 복구 기능 단 취소 불가
+  - remote -v : 원격 저장소 위치 확인
+  - git commit --amend : 커밋메시지 수정
+  - git reset --hard 버전 : 해당 버전으로 리셋, 이전기록 그냥 삭제 해버림, push 전 가능 , --mixed, --soft 
+  
+  - git revert 버전 : : 삭제할 버전 선택, 되돌리는 커밋을 남김, push 후 가능
 - 기본흐름
   - modified : 파일이 수정된 상태
   - staged : 수정한 파일 곧 커밋할 것이라 표시한 상태
