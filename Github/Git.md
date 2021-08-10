@@ -41,8 +41,9 @@
     - Untracked file : 트래킹 X 파일들, 커밋이 된적 없는 파일, working directory
   - git log : 현재 저장소에 기록된 커밋 조회, 다양한 옵션을 통해 로그를 조회할 수 있음
     - git log -1 : 
-    - git log -oneline : 
+    - git log --oneline : 로컬의 파일 목록
     - git log -2--oneline : 최근 2개만 한줄로
+  - esc :wq 나가는기능
 - 기본흐름
   - modified : 파일이 수정된 상태
   - staged : 수정한 파일 곧 커밋할 것이라 표시한 상태
