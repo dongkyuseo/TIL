@@ -145,6 +145,137 @@ lat, lng
 (37.5663174209601, 126.977829174031)
 ```
 
-### 공공기관.csv파일에 위도 경도 추가하기
+### 지도위에 공공기관 표시
 
-- 
+```python
+import folium
+# 지도위 표시를 위한 폴리움 활성
+
+map = folium.Map(location=[df.위도.mean(),df.경도.mean()], zoom_start=12)
+# 변수map에 folium.Map으로 중심점(위도, 경도)를 잡은 후 zoom_start= 로 확대율 조정
+for i in df.index:				# index에서 반복문 실행
+  folium.Circle(				# 마커를 원형으로 선택
+      radius=300,				# 원의 크기 선택 300
+      location=[df.위도[i], df.경도[i]],		# 각 인덱스의 위도 경도를 받아 folium.Circle로 위치표시
+      popup=folium.Popup(f'{df.도로명주소[i]}', max_width=300),   # popup 누르면 나오는 문구, max_widht 팝업창 넓이
+      tooltip=df.공공기관[i],   # 커서온시 문구
+      color='#3186cc',    # 마커 색
+      fill=True,   # 마커 채우기
+      fill_color='#3186cc' # 채우기 색 반투명
+  ).add_to(map)
+
+title = '<h3 align="center" style="font-size:20px">서울시 공공화장실 안내</h3>'
+				# 중앙정렬, 글씨크기, 제목내용
+map.get_root().html.add_child(folium.Element(title)) # 제목 추가
+map # 지도 표시
+
+```
+
+### 단계구분도
+
+```python
+from google.colab import files 		# 코랩에 파일추가
+uploaded = files.upload()			# 파일 업로드 함수
+filename = list(uploaded.keys())[0]  # 업로드파일의 키값을 filename변수 할당, 여기선 서울시 구 명칭
+```
+
+- 코랩에서 단계구분도를 하기 위한 기본 셋팅
+
+```python
+import pandas as pd
+
+df = pd.read_csv(filename)
+df.head()
+# 판다스 함수로 csv파일 호출, 서울시 구 동 인구 남 녀 자료
+
+```
+
+![image-20210816202642482](C:/Users/DQ/AppData/Roaming/Typora/typora-user-images/image-20210816202642482.png)
+
+```python
+uploaded = files.upload()
+filename = list(uploaded.keys())[0]
+# 서울시 동별 폴리곤 자료 업로드
+import json
+# json 호출
+with open(filename) as json_file:
+  geo_data = json.load(json_file)
+# 서울시 동별 위도 경도 geo_data 업로드
+import folium
+# 폴리움 호출
+
+center = [37.581, 126.986]    # 서울 중심부 위도, 경도
+map = folium.Map(location=center, zoom_start=11) # 맵의 중심위치, 확대율 선택
+
+folium.Choropleth(					  # folium.Choropleth로 동별 위도 경도따라 단계구분도 설정
+    geo_data=geo_data,                  # 지도데이터 파일 경로, geo_data
+    data = df,                          # 시각화 하고자 하는 데이터 프레임
+    columns = ('동','인구'),            # ('지도 데이터와 매핑할 값', '시각화 하고자하는 변수')
+    key_on = 'feature.properties.동',   # 데이터 파일과 매핑할 값
+    fill_color = 'BuPu',                # Color Map
+    legend_name = '노령 인구수'         # Color 범주
+).add_to(map)
+map
+```
+
+![image-20210816203602846](C:/Users/DQ/AppData/Roaming/Typora/typora-user-images/image-20210816203602846.png)
+
+- 동별로 구분되며, 인구수에 따른 색 차이
+
+```python
+center = [37.581, 126.986]    # 서울 중심부 위도, 경도
+map = folium.Map(location=center, zoom_start=11, tiles='Stamen Toner')
+		# tiles를 다른 지도 배경을 적용
+
+folium.TileLayer('cartodbpositron').add_to(map) # 다른 배경 적용하기 위한 명령어
+folium.Choropleth(
+    geo_data=filename,
+    data = df,
+    columns = ('동','인구'),
+    key_on = 'feature.properties.동',
+    fill_color = 'BuPu',
+    legend_name = '노령 인구수'
+).add_to(map)
+title = '<h3 align="center" style="font-size:20px">서울시 동별 노령인구</h3>' # 단계구분도 제목 추가
+map.get_root().html.add_child(folium.Element(title))						# 단계구분도 제목 추가
+map
+```
+
+![image-20210816203840344](C:/Users/DQ/AppData/Roaming/Typora/typora-user-images/image-20210816203840344.png)
+
+```python
+center = [37.581, 126.986]    # 서울 중심부 위도, 경도
+map = folium.Map(location=center, zoom_start=11, tiles='Stamen Toner')
+
+folium.TileLayer('cartodbpositron').add_to(map)
+folium.Choropleth(
+    geo_data=gu_geodata,
+    data = df_gu,		# 구별 구분 데이터자료 업로드후 변수 적용
+    columns = ('구','인구'),	# 구별 인구수로 변경
+    key_on = 'feature.id',		# 데이터에 구 값이 id로 할당되어 변경
+    fill_color = 'BuPu',
+    legend_name = '노령 인구수'
+).add_to(map)
+title = '<h3 align="center" style="font-size:20px">서울시 구별 노령인구</h3>'
+map.get_root().html.add_child(folium.Element(title))
+map
+```
+
+![image-20210816204002861](C:/Users/DQ/AppData/Roaming/Typora/typora-user-images/image-20210816204002861.png)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
