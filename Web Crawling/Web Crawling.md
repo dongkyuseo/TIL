@@ -49,3 +49,4 @@
   - table > tr - 부모 자식 관계 셀렉터
   - table tr    - 자손 셀렉터
   - table, tr   - 동격
+
