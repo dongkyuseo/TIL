@@ -42,9 +42,7 @@
   - 시간 복잡도 : 알고리즘을 소요시간 기준으로 성능분석하는 방법
   - 알고리즘 성능 표기
     - 빅-오 표기법(Big-Oh Notation)
-    - ![image-20210821103038044](C:/Users/DQ/AppData/Roaming/Typora/typora-user-images/image-20210821103038044.png) 중 가장 가능한 좋은 알고리즘을 적용하는 것 이 좋음
 
-![image-20210821103153547](C:/Users/DQ/AppData/Roaming/Typora/typora-user-images/image-20210821103153547.png)
 
 - 알고리즘은 정답이 없고 어떤 방법을 선택하느냐에 따라 달라짐
 
