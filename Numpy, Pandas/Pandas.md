@@ -777,3 +777,321 @@ df.sort_values(by=1)
 3	4.0	3.0	4.0	2.0
 ```
 
+
+
+### 행/열 합계
+
+- 행열의 합계는 sum(axis) 메서드를 사용함, axis=0 :행, axis=1 : 열
+
+```python
+np.random.seed(1)
+df2 = pd.DataFrame(np.random.randint(10, size=(4, 8)))
+df2
+>>>
+	0	1	2	3	4	5	6	7
+0	5	8	9	5	0	0	1	7
+1	6	9	2	4	5	2	4	2
+2	4	7	7	9	1	7	0	6
+3	9	9	7	6	9	1	0	1
+
+df2["RowSum"] = df2.sum(axis=1) # 열추가
+df2
+	0	1	2	3	4	5	6	7	RowSum
+0	5	8	9	5	0	0	1	7	35
+1	6	9	2	4	5	2	4	2	34
+2	4	7	7	9	1	7	0	6	41
+3	9	9	7	6	9	1	0	1	42
+
+df2.sum() # axis=0 이 Deafalt
+0          24
+1          33
+2          25
+3          24
+4          15
+5          10
+6           5
+7          16
+RowSum    152
+dtype: int64
+    
+df2.loc["ColTotal", :] = df2.sum()
+df2
+```
+
+![데이터프레임데이터조작](image/%EB%8D%B0%EC%9D%B4%ED%84%B0%ED%94%84%EB%A0%88%EC%9E%84%EB%8D%B0%EC%9D%B4%ED%84%B0%EC%A1%B0%EC%9E%91.jpg)
+
+### apply 변환
+
+- 행이나 열단위의 더 복잡한 처리를 할때 apply 메서드 사용
+
+```python
+df3 = pd.DataFrame({
+    'A': [1, 3, 4, 3, 4],
+    'B': [2, 3, 1, 2, 3],
+    'C': [1, 5, 2, 4, 4]
+})
+
+# 람다 함수를 활용해, 최대값-최소값 을 구하는 방법
+df3.apply(lambda x: x.max() - x.min())
+>>> A    3
+    B    2
+    C    4
+    dtype: int64
+
+# df3의 각 열마다 값의 사용 횟수 확인        
+df3.apply(pd.value_counts)
+	A	B	C
+1	1.0	1.0	1.0
+2	NaN	2.0	1.0
+3	2.0	2.0	NaN
+4	2.0	NaN	2.0
+5	NaN	NaN	1.0
+```
+
+
+
+### fillna 메서드
+
+- NaN값은 fillna 메서드를 이용해 원하는 값으로 변경 가능
+
+```python
+df3.apply(pd.value_counts).fillna(0.0) # nan 값을 0.0으로 변경
+	A	B	C
+1	1.0	1.0	1.0
+2	0.0	2.0	1.0
+3	2.0	2.0	0.0
+4	2.0	0.0	2.0
+5	0.0	0.0	1.0
+```
+
+
+
+### astype 메서드
+
+- 전체 데이터 자료형을 바꿀수 있음
+
+```python
+# df3의 NaN 값을 0으로 바꾸고, 타입을 정수로 바꿈
+df3.apply(pd.value_counts).fillna(0).astype(int)
+	A	B	C
+1	1	1	1
+2	0	2	1
+3	2	2	0
+4	2	0	2
+5	0	0	1
+```
+
+
+
+### 실수 값을 카테고리 값으로 변환
+
+- cut : 실수 값의 경계선을 지정하는 경우
+- qcut : 갯수가 똑같은 구간으로 나누는 경우
+
+```python
+ages = [0, 2, 10, 21, 23, 37, 31, 61, 20, 41, 32, 101]
+bins = [1, 20, 30, 50, 70, 100]
+labels = ["미성년자", "청년", "중년", "장년", "노년"]
+
+		# 나이를 bins의 사이값 순서로 라벨을 해당하는 구간에 순서의 라벨을 부여함
+cats = pd.cut(ages, bins, labels=labels)
+cats
+[NaN, 미성년자, 미성년자, 청년, 청년, ..., 장년, 미성년자, 중년, 중년, NaN] # 라벨 밖의 범위일 경우 NaN
+Length: 12
+Categories (5, object): [미성년자 < 청년 < 중년 < 장년 < 노년]
+
+```
+
+```python
+df4 = pd.DataFrame(ages, columns=["ages"])
+df4["age_cat"] = pd.cut(df4.ages, bins, labels=labels)
+df4
+>>>
+	ages age_cat
+0	0	NaN
+1	2	미성년자
+2	10	미성년자
+3	21	청년
+4	23	청년
+5	37	중년
+6	31	중년
+7	61	장년
+8	20	미성년자
+9	41	중년
+10	32	중년
+11	101	NaN
+
+# cut으로 만든 값은 str타입이 아님, 카테고리 타입이어서 str타입으로 변경
+df4.age_cat.astype(str) + df4.ages.astype(str)
+>>>
+0       nan0
+1      미성년자2
+2     미성년자10
+3       청년21
+4       청년23
+5       중년37
+6       중년31
+7       장년61
+8     미성년자20
+9       중년41
+10      중년32
+11    nan101
+dtype: object
+    
+```
+
+- qcut은 구간 경계선을 지정하지 않고 갯수가 같도록 지정한 수의 구간으로 나눔
+
+```python
+data = np.random.randn(1000) # 1000개의 랜덤난수 생성
+		# qcut으로 값을 4등분함, 라벨은 나눌갯수만큼 지정해줌
+cats = pd.qcut(data, 4, labels=["Q1", "Q2", "Q3", "Q4"])
+cats
+>>>
+[Q2, Q1, Q2, Q3, Q1, ..., Q1, Q1, Q4, Q4, Q2] #4등분나눈 값에 해당하는 라벨이 출력됨
+Length: 1000
+Categories (4, object): [Q1 < Q2 < Q3 < Q4]
+
+pd.value_counts(cats) # 각 값의 갯수를 세봄
+>>> 
+Q4    250
+Q3    250
+Q2    250
+Q1    250
+dtype: int64
+```
+
+
+
+## 데이터 프레임 인덱스 조작
+
+### 데이터프레임 인덱스 설정 및 제거
+
+- 인덱스 열이 일반 데이터에 있거나, 일반 데이터 열이 인덱스로 되어 있을 경우
+- set_index : 기존의 행 인덱스를 제거하고 데이터 열중 하나를 인덱스로 설정
+- reset_index : 인덱스를 데이터 열로 추가하고 정수로된 디폴트 인덱스로 바꿈
+
+```python
+np.random.seed(0)
+df1 = pd.DataFrame(np.vstack([list('ABCDE'),
+                              np.round(np.random.rand(3, 5), 2)]).T,
+                   columns=["C1", "C2", "C3", "C4"])
+df1
+>>>
+	C1	C2	    C3	   C4
+0	A	0.55	0.65	0.79
+1	B	0.72	0.44	0.53
+2	C	0.6	    0.89	0.57
+3	D	0.54	0.96	0.93
+4	E	0.42	0.38	0.07
+
+		# c1을 인덱스로 지정, 기존인덱스는 삭제됨
+df2 = df1.set_index("C1")
+df2
+>>>
+	C2	    C3	     C4
+C1			
+A	0.55	0.65	0.79
+B	0.72	0.44	0.53
+C	0.6	    0.89	0.57
+D	0.54	0.96	0.93
+E	0.42	0.38	0.07
+
+# C2를 인덱스로 지정
+df2.set_index("C2")
+>>>
+		C3	    C4
+C2		
+0.55	0.65	0.79
+0.72	0.44	0.53
+0.6 	0.89	0.57
+0.54	0.96	0.93
+0.42	0.38	0.07
+
+# 인덱스 변경서항 초기화
+df2.reset_index()
+>>>
+	C1	C2	    C3  	C4
+0	A	0.55	0.65	0.79
+1	B	0.72	0.44	0.53
+2	C	0.6	    0.89	0.57
+3	D	0.54	0.96	0.93
+4	E	0.42	0.38	0.07
+
+# drop=True 설정할 경우 기존의 인덱스열은 버림
+df2.reset_index(drop=True)
+	C2		C3		C4
+0	0.55	0.65	0.79
+1	0.72	0.44	0.53
+2	0.6		0.89	0.57
+3	0.54	0.96	0.93
+4	0.42	0.38	0.07
+```
+
+
+
+### 다중 인덱스
+
+- 행이나 열에 여러 계층을 가지는 인덱스, 즉 다중인덱스를 설정 가능하다.
+- 데이터프레임을 생성할 때 컬럼 인수에 리스트의 리스트 형태로 인덱스를 넣으면 다중열 인덱스를 가지게 됨
+
+```python
+np.random.seed(0)
+df3 = pd.DataFrame(np.round(np.random.randn(5, 4), 2),
+                   columns=[["A", "A", "B", "B"], ["C1", "C2", "C1", "C2"]])
+df3
+>>>
+	A				B
+	C1		C2		C1		C2
+0	1.76	0.40	0.98	2.24
+1	1.87	-0.98	0.95	-0.15
+2	-0.10	0.41	0.14	1.45
+3	0.76	0.12	0.44	0.33
+4	1.49	-0.21	0.31	-0.85
+
+# 다중인덱스 행, 열 적용
+np.random.seed(0)
+df4 = pd.DataFrame(np.round(np.random.randn(6, 4), 2),
+                   columns=[["A", "A", "B", "B"],		# 열 다중인덱스
+                            ["C", "D", "C", "D"]],
+                   index=[["M", "M", "M", "F", "F", "F"], # 행 다중인덱스
+                          ["id_" + str(i + 1) for i in range(3)] * 2])
+df4.columns.names = ["Cidx1", "Cidx2"] # 열 다중인덱스의 컬럼명
+df4.index.names = ["Ridx1", "Ridx2"] # 행 다중인덱스의 컬럼명
+df4
+        Cidx1	A				B
+        Cidx2	C		D		C		D
+Ridx1	Ridx2				
+M	    id_1	1.76	0.40	0.98	2.24
+        id_2	1.87	-0.98	0.95	-0.15
+        id_3	-0.10	0.41	0.14	1.45
+F	    id_1	0.76	0.12	0.44	0.33
+        id_2	1.49	-0.21	0.31	-0.85
+        id_3	-2.55	0.65	0.86	-0.74
+```
+
+
+
+### 행 인덱스와 열 인덱스 교환
+
+- stack : 열 인덱스 -> 행 인덱스로 변환
+- unstack : 행인덱스 -> 열 인덱스로 변환
+
+```python
+df4.stack("Cidx1") # df4.stack(0) 0번째행, 1은 cidx2
+			   Cidx2 C		D
+Ridx1	Ridx2	Cidx1		
+M		id_1	A	1.76	0.40
+				B	0.98	2.24
+		id_2	A	1.87	-0.98
+				B	0.95	-0.15
+		id_3	A	-0.10	0.41
+				B	0.14	1.45
+F		id_1	A	0.76	0.12
+				B	0.44	0.33
+		id_2	A	1.49	-0.21
+				B	0.31	-0.85
+		id_3	A	-2.55	0.65
+				B	0.86	-0.74
+```
+
