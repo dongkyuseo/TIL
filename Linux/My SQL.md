@@ -98,3 +98,229 @@
 - SELECT to_days('2021-11-18') - to_days(now()); # 특정일을 기준으로 - 오늘을 해 일정계산가능
 - SELECT DAYOFWEEK(dt) FROM date_table; # 요일 확인 1-일, 2-월, ..., 7-토
 
+
+
+### 테이블 생성
+
+- use mcdb;
+  create table 테이블명(조건설정) auto_increment=시작번호설정;
+- show tables; 테이블 조회
+- desc 테이블명; 테이블 정보 확인
+- drop table 테이블명; 테이블 삭제
+- 테이블 변경
+  - alter table
+    - add : 칼럼추가
+    - drop : 컬럼 삭제
+    - change : 컬럼명, 자로형 변경
+    - modify : 컬럼 순서 바꾸기
+
+### Key의 종류
+
+- 후보키(candidate key) : 테이블 구성하는 열 중에서 유일하게 식별할 수 있는 열
+- 기본키(primary key) : 테이블에서 유일하게 식별하기 위해 사용하는 키
+- 대체키(alternate key) : 후보키중 기본키를 제외한 나머지 후보키
+- 외래키(foreign key) : 테이블 내의 열 중 다른 테이블의 기본키를 참조하는 열
+- 슈퍼키(super key) : 2개 이상의 열이 합쳐져서 기본키로 사용하는 것
+
+# colab에서 MySQL 사용하기
+
+## 초기 연결 설정방법
+
+```python
+!pip install pymysql > /dev/null #mysql 설치
+
+# mysql.json 파일 업로드
+from google.colab import files
+uploaded = files.upload()
+filename = list(uploaded.keys())[0]
+
+# json 파일 읽기
+import json
+with open(filename) as fp:
+  config_str = fp.read()
+config = json.loads(config_str)
+
+# mysql 로그인 및 접속
+import pymysql 
+conn = pymysql.connect( 
+    host = config['host'], 
+    user = config['user'], 
+    password = config['password'], 
+    database = config['database'], 
+    port = config['port'] 
+  )
+
+# mysql 연결 접속
+cur = conn.cursor()
+
+# mysql 접속 종료
+cur.close()
+conn.close()
+```
+
+## 테이블
+
+### 생성
+
+```python
+
+# 커서를 지정해서 연결후 
+cur = conn.cursor() 
+
+# 테이블을 생성하는데 ''' 내용에 SQL 생성문을 적음'''
+sql_create_table = ''' 
+  create table if not exists users ( 
+    uid varchar(20) not null primary key, 
+    pwd char(44) not null, 
+    uname varchar(20) not null, 
+    email varchar(40),
+    reg_date datetime default current_timestamp, 
+    is_deleted int default 0 
+  ); 
+  ''' 
+# EXECUTE 로 생성해주면 SQL에 가서 조회시 생성되어 있음
+cur.execute(sql_create_table)
+```
+
+### 추가
+
+```python
+cur = conn.cursor()
+
+sql_insert = "INSERT INTO users(uid, pwd, uname) VALUES('admin', '1234', '관리자');"
+
+cur.execute(sql_insert)
+
+# 단건 조회시 cur.fetchone()
+row = cur.fetchone()
+row
+```
+
+- 프로그램에서 데이터 변경시 데이터베이스에 바로 적용되는게 아닌, MySQL의 cach에 저장되어 데이터엔 늦게 반영됨
+
+```python
+# 데이터를 하드 디스크에 쓰게 하는 명령
+conn.commit()
+```
+
+- **placeholder** : 데이터 입력 및 저장을 프로그램화 함
+
+```python
+# 여러 건의 데이터 추가하는 방법
+# 1
+sql_insert_ph = "INSERT INTO users(uid, pwd, uname) VALUES(%s, '1234', %s);" # 가변인수를 %s 로 받고
+uid, uname = 'djy', '대조영'
+# 각각의 변수에 저장해 준뒤
+
+cur.execute(sql_insert_ph, (uid, uname)) #튜플로 묶어 적용시킴
+conn.commit()
+
+# 2 여러건의 리스트, 튜플을 튜플로 묶기
+users = (('gdhong', '홍길동'), ('jbpark', '박재범'))
+cur.executemany(sql_insert_ph, users)
+conn.commit()
+
+# 3 반복문 사용
+users = (('gdhong2', '홍길동'), ('jbpark2', '박재범'))
+
+for user in users:
+  sql_insert_ph = "INSERT INTO users(uid, pwd, uname) VALUES(%s, '1234', %s);"
+  cur.execute(sql_insert_ph, user)
+conn.commit()
+
+```
+
+### 조회
+
+```python
+sql_select = """
+  SELECT uid, uname, email, 
+    date_format(reg_date, '%Y-%m-%d %H:%i') AS reg_date
+    FROM users WHERE is_Deleted=0 ORDER BY reg_date; 
+"""
+
+cur = conn.cursor()
+cur.execute(sql_select)
+row = cur.fetchone() # 단건 조회
+row
+
+rows = cur.fetchmany(3) # 다건 조회
+rows
+
+rows = cur.fetchall() # 전체 조회
+rows
+
+for row in cur: # 반복문을 사용한 전체 조회
+  print(row)
+```
+
+
+
+### 검색
+
+```python
+uid = 'eskim'
+sql_search = """
+  SELECT uid, uname, email, date_format(reg_date, '%%Y-%%m-%%d %%H:%%i') AS reg_date
+    FROM users WHERE is_deleted = 0 AND uid=%s; 
+ """
+# %s 를 사용하면서 다른 %Y와 같은걸 사용하려면 %%두번 사용해야 함
+
+cur = conn.cursor()
+cur.execute(sql_search, (uid,)) # 튜플로 입력해야 해서 (단어,) 로 넣어줌
+
+result = cur.fetchone() # 단건 검색
+result
+
+# 사용자가 없을 경우
+uid = 'park'
+cur = conn.cursor()
+cur.execute(sql_search, (uid,)) # 튜플로 입력해야 해서 (단어,) 로 넣어줌
+result = cur.fetchone()
+result
+>>>
+# 결과값이 출력이 안됨
+
+if result:
+  print(result)
+else:
+  print(f'uid={uid}인 사용자는 없습니다.')
+```
+
+## password
+
+### 패스워드 넣기
+
+- user table에 패스워드 넣기
+- password
+  - 단방향 : 평문 > 비문 (비문 > 평문 은 불가능)
+  - 양방향 : 평문 <> 비문
+- Secure Hash Algorithm(SHA-256) : 암호화 알고리즘으로 바이너리화 함
+
+```python
+import hashlib
+pwd = '1234'
+pwd_sha256 = hashlib.sha256(pwd.encode()) #pwd 1234을 sha256으로 인코딩
+pwd_sha256.digest() # 인코딩한 값을 읽기, 바이너리값으로 나옴
+>>>b'\x03\xacgB\x16\xf3\xe1\\v\x1e\xe1\xa5\xe2U\xf0g\x956#\xc8\xb3\x88\xb4E\x9e\x13\xf9x\xd7\xc8F\xf4'
+```
+
+- Base64로 인코딩
+
+```python
+import base64
+
+base64.b64encode(pwd_sha256.digest())
+# sha256으로 인코딩 된 값을 넣어주면 base64로 인코딩 됨
+>>> b'A6xnQhbz4Vx2HuGl4lXwZ5U2I8iziLRFnhP5eNfIRvQ='
+```
+
+```python
+# 암호화 된 내용 사용하기 위한 디코드
+hashed_pwd = base64.b64encode(pwd_sha256.digest()).decode('utf-8')
+hashed_pwd
+>>> A6xnQhbz4Vx2HuGl4lXwZ5U2I8iziLRFnhP5eNfIRvQ=
+```
+
+
+
