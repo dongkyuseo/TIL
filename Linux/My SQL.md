@@ -287,6 +287,12 @@ else:
   print(f'uid={uid}인 사용자는 없습니다.')
 ```
 
+### 테이블 초기화
+
+- truncate 테이블명
+
+
+
 ## password
 
 ### 패스워드 넣기
