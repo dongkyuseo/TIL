@@ -7,6 +7,7 @@ id.txt
 kakaoapikey.txt
 image/
 정답/
+00.study/
 
 # C extensions
 *.so
