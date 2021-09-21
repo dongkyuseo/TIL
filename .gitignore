@@ -8,6 +8,7 @@ kakaoapikey.txt
 image/
 정답/
 00.study/
+실습데이터/
 
 # C extensions
 *.so
