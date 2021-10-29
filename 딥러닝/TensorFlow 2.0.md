@@ -142,7 +142,135 @@ predictions[0]
 
 
 
+## 언더피팅 오버피팅
 
+- 언더피팅 : 에폭을 조금돌릴경우
+- 오버피팅 : 에폭을 많이 돌려 과대적합 되는 경우
+
+
+
+## 조기종료
+
+```python
+from tensorflow.keras.callbacks import EarlyStopping
+
+early_stopping = EarlyStopping(monitor='val_accuracy', patience=3)
+```
+
+- 조기종료(ealystop) : val_accuracy 혹은 val_loss 값을 monitor 값으로 설정하고 patience 로 설정한 값만큼 개선이 되지 않을 경우 모델학습을 종료시킴
+
+
+
+```python
+from tensorflow.keras.callbacks import EarlyStopping
+
+early_stopping = EarlyStopping(monitor='val_accuracy', patience=3, min_delta=0.05)
+```
+
+- min_delta 로 값을 설정해 주면 개선되는 정도의 크기를 정해줄 수 잇음
+
+
+
+## 배치정규화 & 드롭아웃
+
+- 신경망에 데이터를 입력으로 넣을 떄는 스케일러를 활용해 모든 데이터를 공통 범위로 배치함
+- 매우 다른 크기의 데이터는 다른 크기의 활성화를 생성하는 경향이 있어 훈련을 불안정하게 함
+- StandarScaler : 평균과 표준편차 활용(평균을 제거하고 데이터를 분산으로 조정함)
+- MinMaxScaler : 최대/최소값이 각각 1과 0이 되도록 함
+- RobustScaler : 이상치 영향을 최소화함, IQR활용
+
+
+
+### 배치정규화
+
+- 은닉층에서 배치단위로 정규화 하는 방법
+- 학습 속도 향상
+- 오버피팅 억제
+- 가중치 초기화 민감도 해소
+
+
+
+### 드롭아웃
+
+- 완전연결체로 연결된 것을 임의로 생략함
+
+```python
+from tensorflow.keras.layers import Dense, Flatten, BatchNormalization, Dropout
+
+model = Sequential([
+    Flatten(input_shape=(28, 28)),
+    Dropout(0.2),
+    BatchNormalization(),
+    Dense(64, activation='relu'),
+    Dropout(0.2),
+    BatchNormalization(),
+    Dense(10, activation='softmax')
+])
+```
+
+
+
+## 모델 저장 및 불러오기
+
+1. 가중치 값만 저장
+
+```python
+from tensorflow.keras.layers import ModelCheckpoint
+
+			# 저장 경로 설정
+cp_path = 'mdoel_save/cp.ckpt'
+checkpoint = ModelCheckpoint(filepath=cp_path,
+                             # 가장 좋은 가중치 값만 저장
+                            save_best_only=True,
+                             # 가중치 값만 저장
+                            save_weights_only=True,
+                             # 표시 여부 설정
+                            verbose=1)
+
+model.fit(x_train, y_train, validation_data=(x_val,y_val), epochs=5, batch_size=64, callbacks=[checkpoint])
+```
+
+- callback 으로 체크포인트를 불러와 줄 수 있음
+
+```python
+# 새모델 불러오기
+model = load_model()
+model.evaluate(x_test, y_test)
+>> 정확도가 매우 낮게 나옴
+
+# 저장된 모델 가중치 불러오기
+model.load_weigths(cp_path)
+model.eavluate(x_test, y_test)
+>>> 모델링중 가장 좋았던 모델의 가중치를 가져오게 되어 정확도가 좋았던 모델만큼 나옴
+```
+
+
+
+2. 모델 저장하기
+
+```python
+from tensorflow.keras.layers import ModelCheckpoint
+
+# 방법 1
+model = load_model()
+					# 모델 저장 경로 및 파일 설정
+checkpoint = ModelCheckpoint('model_save.h5') #save_weights_only=False 기본값임
+model.fit(x_train, y_train, validation_data=(x_val,y_val), epochs=5, batch_size=64, callbacks=[checkpoint])
+
+# 방법 2
+model = load_model()
+model.fit(x_train, y_train, epochs=3)
+# 마지막 모델을 저장하고 저장 경로 및 파일명 설정
+model.save('model_save.h5')
+
+
+# 모델 불러오기
+			# 불러올 모델 경로 및 파일명 설정
+model = load_model('model_save.h5')
+# 모델 성능 평가
+model.evaluate(x_test, y_test)
+
+```
 
 
 
