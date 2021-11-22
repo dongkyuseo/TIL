@@ -10,6 +10,8 @@ image/
 00.study/
 실습데이터/
 data/
+dataset/
+
 # C extensions
 *.so
 
