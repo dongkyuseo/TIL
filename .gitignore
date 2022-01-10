@@ -11,6 +11,7 @@ image/
 실습데이터/
 data/
 dataset/
+예제/
 
 # C extensions
 *.so
