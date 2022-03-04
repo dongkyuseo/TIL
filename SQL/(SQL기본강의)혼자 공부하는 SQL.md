@@ -507,8 +507,8 @@ SELECT buy.mem_id, mem_name, prod_name, addr, CONCAT(phone1, phone2) AS '연락�
 ```sql
 -- 더 나은 SQL 표현식
 SELECT B.mem_id, M.mem_name, B.prod_name, M.addr, CONCAT(M.phone1, M.phone2) AS '연락처'
-	FROM buy B -- 테이블 명을 알리안스로 B로 지정
-		INNER JOIN member M -- 테이블 명을 알리안스로 M으로 지정
+    FROM buy B -- 테이블 명을 알리안스로 B로 지정
+        INNER JOIN member M -- 테이블 명을 알리안스로 M으로 지정
         ON M.mem_id = B.mem_id;
 -- 이후 각각 해당되는 열을 어떤 테이블에서 참조했는지 표시해주면 알아보기 쉬움
 ```
@@ -535,15 +535,13 @@ FROM <첫 번째 테이블(LEFT 테이블)>
 
 ```sql
 SELECT M.mem_id, M.mem_name, B.prod_name, M.addr
-	FROM member M -- 기준이 되는 테이블 지정
-		LEFT OUTER JOIN buy B -- 아우터 조인할 테이블 지정
+    FROM member M -- 기준이 되는 테이블 지정
+        LEFT OUTER JOIN buy B -- 아우터 조인할 테이블 지정
         ON M.mem_id = B.mem_id -- 조인할 기준열 지정
-	ORDER BY M.mem_id; -- 정렬 기준을 member 테이블의 mem_id 기준 오름차순정렬
+    ORDER BY M.mem_id; -- 정렬 기준을 member 테이블의 mem_id 기준 오름차순정렬
 ```
 
 ![5.PNG](D:\workspace\00.TIL\SQL\IMAGE\5.PNG)
-
-
 
 ## 기타 조인
 
@@ -557,8 +555,8 @@ SELECT M.mem_id, M.mem_name, B.prod_name, M.addr
 
 ```sql
 SELECT *
-	FROM buy
-		CROSS JOIN member;
+    FROM buy
+        CROSS JOIN member;
 ```
 
 ![6.PNG](D:\workspace\00.TIL\SQL\IMAGE\6.PNG)
@@ -574,14 +572,12 @@ SELECT *
 ```sql
 -- CROSS JOIN 을 사용하여 대용량 테이블을 만드는 코드
 CREATE TABLE cross_table -- 빈 테이블 생성
-	SELECT * -- 모든 자료 선택
-		FROM sakila.actor -- 기준 자료
-			CROSS JOIN world.country; -- cross join 할 자료
+    SELECT * -- 모든 자료 선택
+        FROM sakila.actor -- 기준 자료
+            CROSS JOIN world.country; -- cross join 할 자료
 
 SELECT * FROM cross_table LIMIT 5; -- 조회시 갯수 제한을 두어 조회
 ```
-
-
 
 ## 자체 조인(self join)
 
@@ -592,7 +588,7 @@ SELECT * FROM cross_table LIMIT 5; -- 조회시 갯수 제한을 두어 조회
 ```sql
 SELECT <열 목록>
 FROM <테이블> 별칭A -- 같은 테이블의 별칭을 A
-	INNER JOIN <테이블> 별칭B -- 같은 테이블의 별칭을 B
+    INNER JOIN <테이블> 별칭B -- 같은 테이블의 별칭을 B
     ON <조인될 조건>
 [WHERE 검색 조건]
 ```
@@ -618,39 +614,119 @@ INSERT INTO emp_table VALUES('개발주임', '정보이사', '3333-1-1');
 
 -- 직원의 직속상관과 직속상관의 연락처를 뽑는 코드
 SELECT A.emp "직원", B.emp "직속상관", B.phone "직속상관연락처"
-	FROM emp_table A -- 똑같은 테이블을 A와 B로 각각 지정해 두개의 테이블인 것 처럼 사용
-		INNER JOIN emp_table B
-			ON A.manager = B.emp
-	WHERE A.emp = '경리부장'; -- 경리부장의 직속상관과 직속상관 연락처 호출
+    FROM emp_table A -- 똑같은 테이블을 A와 B로 각각 지정해 두개의 테이블인 것 처럼 사용
+        INNER JOIN emp_table B
+            ON A.manager = B.emp
+    WHERE A.emp = '경리부장'; -- 경리부장의 직속상관과 직속상관 연락처 호출
 ```
 
 ![](C:\Users\서동규\AppData\Roaming\marktext\images\2022-03-03-16-43-03-image.png)
 
-
-
 ## 04-3 SQL 프로그래밍
 
-(11강 부터 시작)
+- SQL에서도 기본적인 조건문, 반복문은 프로그래밍 가능함
 
 
 
+### IF문
+
+- IF문은 조건문으로 참이면 무엇을 실행하고 거짓이면 실행하지 않음
+
+- 기본 IF문 형식
+
+```sql
+IF <조건식> THEN
+	SQL 문장들
+END IF
+```
+
+- IF문 예시
+
+```sql
+USE market_db;
+DROP PROCEDURE IF EXISTS ifProc1; -- 기존에 만들어진게 있다면 삭제
+DELIMITER $$
+CREATE PROCEDURE ifProc1()
+BEGIN
+	IF 100 = 100 THEN
+		SELECT '100은 100과 같습니다.';
+	END IF;
+END $$
+DELIMITER ;
+CALL ifProc1();
+```
+
+### IF ~ ELSE 문
+
+- 조건에 따라 다른 부분을 수행함
+
+```sql
+USE market_db;
+DROP PROCEDURE IF EXISTS ifProc2; -- 기존에 만들어진게 있다면 삭제
+DELIMITER $$
+CREATE PROCEDURE ifProc2()
+BEGIN
+	DECLARE myNum INT; -- myNum 변수 선언
+    SET myNum = 200; -- 변수에 값 대입
+    IF myNum = 100 THEN
+		SELECT '100입니다.';
+	ELSE
+		SELECT '100이 아닙니다.';
+    END IF;
+END $$
+DELIMITER ;
+CALL ifProc2();
+```
+
+- 응용문
+
+```sql
+USE market_db;
+DROP PROCEDURE IF EXISTS ifProc3; -- 기존에 만들어진게 있다면 삭제
+DELIMITER $$
+CREATE PROCEDURE ifProc3()
+BEGIN
+	DECLARE debutDate DATE; -- 데뷔일
+    DECLARE curDate DATE; -- 오늘날짜
+    DECLARE days INT; -- 활동일수
+    
+    SELECT debut_date INTO debutDate -- debut_date결과를 debutDate 변수에 할당
+		FROM market_db.member
+        WHERE mem_id = 'APN';
+        
+	SET curDate = CURRENT_DATE(); -- 오늘날짜를 curDate 변수에 할당
+    SET days = DATEDIFF(curDate, debutDate); 
+    -- 데뷔일 부터 오늘날짜 까지의 일수 계산하여 days 변수에 할당
+    
+    IF (days/365) >= 5 THEN -- 데뷔한지 5년이 지났다면
+		SELECT CONCAT('데뷔한지', days, '일이나 지났습니다.');
+        
+	ELSE
+		SELECT '데뷔한지'+ days+ '일 밖에 안됐습니다.';
+    END IF;
+END $$
+DELIMITER ;
+CALL ifProc3();
+```
 
 
 
+## CASE문
 
+- CASE문은 여러가지 조건을 설정 가능(다중분기)
 
-
-
-
-
-
-
-
-
-
-
-
-
+```sql
+CASE
+	WHEN 조건1 THEN
+		SQL문장들1
+	WHEN 조건2 THEN
+		SQL문장들2
+	WHEN 조건3 THEN
+		SQL문장들3
+	ELSE
+		SQL문장들4
+END CASE;
+```
 
 
 
