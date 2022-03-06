@@ -626,8 +626,6 @@ SELECT A.emp "직원", B.emp "직속상관", B.phone "직속상관연락처"
 
 - SQL에서도 기본적인 조건문, 반복문은 프로그래밍 가능함
 
-
-
 ### IF문
 
 - IF문은 조건문으로 참이면 무엇을 실행하고 거짓이면 실행하지 않음
@@ -636,7 +634,7 @@ SELECT A.emp "직원", B.emp "직속상관", B.phone "직속상관연락처"
 
 ```sql
 IF <조건식> THEN
-	SQL 문장들
+    SQL 문장들
 END IF
 ```
 
@@ -648,9 +646,9 @@ DROP PROCEDURE IF EXISTS ifProc1; -- 기존에 만들어진게 있다면 삭제
 DELIMITER $$
 CREATE PROCEDURE ifProc1()
 BEGIN
-	IF 100 = 100 THEN
-		SELECT '100은 100과 같습니다.';
-	END IF;
+    IF 100 = 100 THEN
+        SELECT '100은 100과 같습니다.';
+    END IF;
 END $$
 DELIMITER ;
 CALL ifProc1();
@@ -666,12 +664,12 @@ DROP PROCEDURE IF EXISTS ifProc2; -- 기존에 만들어진게 있다면 삭제
 DELIMITER $$
 CREATE PROCEDURE ifProc2()
 BEGIN
-	DECLARE myNum INT; -- myNum 변수 선언
+    DECLARE myNum INT; -- myNum 변수 선언
     SET myNum = 200; -- 변수에 값 대입
     IF myNum = 100 THEN
-		SELECT '100입니다.';
-	ELSE
-		SELECT '100이 아닙니다.';
+        SELECT '100입니다.';
+    ELSE
+        SELECT '100이 아닙니다.';
     END IF;
 END $$
 DELIMITER ;
@@ -686,30 +684,28 @@ DROP PROCEDURE IF EXISTS ifProc3; -- 기존에 만들어진게 있다면 삭제
 DELIMITER $$
 CREATE PROCEDURE ifProc3()
 BEGIN
-	DECLARE debutDate DATE; -- 데뷔일
+    DECLARE debutDate DATE; -- 데뷔일
     DECLARE curDate DATE; -- 오늘날짜
     DECLARE days INT; -- 활동일수
-    
+
     SELECT debut_date INTO debutDate -- debut_date결과를 debutDate 변수에 할당
-		FROM market_db.member
+        FROM market_db.member
         WHERE mem_id = 'APN';
-        
-	SET curDate = CURRENT_DATE(); -- 오늘날짜를 curDate 변수에 할당
+
+    SET curDate = CURRENT_DATE(); -- 오늘날짜를 curDate 변수에 할당
     SET days = DATEDIFF(curDate, debutDate); 
     -- 데뷔일 부터 오늘날짜 까지의 일수 계산하여 days 변수에 할당
-    
+
     IF (days/365) >= 5 THEN -- 데뷔한지 5년이 지났다면
-		SELECT CONCAT('데뷔한지', days, '일이나 지났습니다.');
-        
-	ELSE
-		SELECT '데뷔한지'+ days+ '일 밖에 안됐습니다.';
+        SELECT CONCAT('데뷔한지', days, '일이나 지났습니다.');
+
+    ELSE
+        SELECT '데뷔한지'+ days+ '일 밖에 안됐습니다.';
     END IF;
 END $$
 DELIMITER ;
 CALL ifProc3();
 ```
-
-
 
 ## CASE문
 
@@ -717,56 +713,363 @@ CALL ifProc3();
 
 ```sql
 CASE
-	WHEN 조건1 THEN
-		SQL문장들1
-	WHEN 조건2 THEN
-		SQL문장들2
-	WHEN 조건3 THEN
-		SQL문장들3
-	ELSE
-		SQL문장들4
+    WHEN 조건1 THEN
+        SQL문장들1
+    WHEN 조건2 THEN
+        SQL문장들2
+    WHEN 조건3 THEN
+        SQL문장들3
+    ELSE
+        SQL문장들4
 END CASE;
+```
+
+- CASE문 사용 예시
+
+```sql
+USE market_db;
+DROP PROCEDURE IF EXISTS caseProc;
+DELIMITER $$
+CREATE PROCEDURE caseProc()
+BEGIN
+	DECLARE point INT;
+    DECLARE credit CHAR(1);
+    SET point = 88;
+    
+    CASE
+		WHEN point >= 90 THEN
+			SET credit = 'A';
+		WHEN point >= 80 THEN
+			SET credit = 'B';
+		WHEN point >= 70 THEN
+			SET credit = 'C';
+		WHEN point >= 60 THEN
+			SET credit = 'D';
+		ELSE
+			SET credit = 'F';
+	END CASE;
+    SELECT CONCAT('취득점수 : ', point), CONCAT('학점 : ', credit);
+END $$
+DELIMITER ;
+CALL caseProc();
+```
+
+- CASE문 응용(2개의 테이블을 병합하고 총 구매액 기준으로 내림차순정렬)
+
+```sql
+   SELECT B.mem_id, M.mem_name, SUM(price*amount) '총 구매액'
+	FROM buy B
+		INNER JOIN member M
+        ON B.mem_id = M.mem_id
+	GROUP BY B.mem_id
+    ORDER BY SUM(price*amount) DESC;
+```
+
+![7.PNG](D:\workspace\00.TIL\SQL\IMAGE\7.PNG)
+
+- CASE문 활용(총 구매액별 등급 부여)
+
+```sql
+SELECT M.mem_id, M.mem_name, SUM(price*amount) '총 구매액',
+	CASE
+		WHEN(SUM(price*amount) >= 1500) THEN '최우수고객'
+        WHEN(SUM(price*amount) >= 1000) THEN '우수고객'
+        WHEN(SUM(price*amount) >= 1) THEN '일반고객'
+        ELSE '유령고객'
+	END '회원등급'
+	FROM buy B
+		RIGHT OUTER JOIN member M
+        ON B.mem_id = M.mem_id
+	GROUP BY M.mem_id
+    ORDER BY SUM(price*amount) DESC;
+```
+
+![8.PNG](D:\workspace\00.TIL\SQL\IMAGE\8.PNG)
+
+
+
+## WHILE 문
+
+- 반복문, WHILE 문이 참이동안 조건문이 계속 반복 됨
+
+- WHILE 문 형식
+
+```sql
+WHILE <조건식> DO
+	SQL 문장들
+END WHILE;
+```
+
+- WHILE문 예시
+
+```sql
+BEGIN
+	DECLARE i INT; -- 1에서 100까지 증가할 변수
+    DECLARE hap INT; -- 더한 값을 누적할 변수
+    SET i = 1;
+    SET hap = 0;
+    
+    WHILE (i <= 100) DO
+		SET hap = hap + i; -- hap의 원래의 값에 i를 더해서 다시 hap에 넣음
+        SET i = i + 1; -- i의 원래의 값에 1을 더해서 다시 i에 넣음
+	END WHILE;
+    SELECT '1부터 100까지의 합', hap;
+END $$
+DELIMITER ;
+CALL whileProc();
+```
+
+- WHILE 문의 응용
+  
+  - ITERATE [레이블] : 지정한 레이블로 가서 계속 진행함
+  
+  - LEAVE [레이블] : 지정한 레이블을 빠져나감. 즉 WHILE 문이 종료됨
+
+```sql
+DROP PROCEDURE IF EXISTS whileProc2;
+DELIMITER $$
+CREATE PROCEDURE whileProc2()
+BEGIN
+	DECLARE i INT; -- 1에서 100까지 증가할 변수
+    DECLARE hap INT; -- 더한 값을 누적할 변수
+    SET i = 1;
+    SET hap = 0;
+    
+    myWhile:
+    WHILE (i <= 100) DO -- While문에 label을 지정
+		IF (i%4 = 0) THEN
+			SET i = i + 1;
+            ITERATE myWhile; -- 지정한 label문으로 가서 계속 진행
+		END IF;
+
+		SET hap = hap + i; -- hap의 원래의 값에 i를 더해서 다시 hap에 넣음
+        IF (hap > 1000) THEN
+			LEAVE myWhile; -- 지정한 label문을 떠남. 즉 while 문을 종료함
+		END IF;
+        
+        SET i = i + 1; -- i의 원래의 값에 1을 더해서 다시 i에 넣음
+	END WHILE;
+    SELECT '1부터 100까지의 합(4의배수 제외), 1000넘으면 종료 : ', hap;
+END $$
+DELIMITER ;
+CALL whileProc2();
+
+```
+
+![9.PNG](D:\workspace\00.TIL\SQL\IMAGE\9.PNG)
+
+
+
+## 동적 SQL
+
+- SQL문은 내용이 고정되어 있는 경우가 대부분임
+
+- 상황에 따라 내용 변경이 필요할때 동적 SQL을 사용하면 변경되는 내용을 실시간으로 적용시켜 사용할 수 있음
+
+
+
+### PREPARE 와 EXECUTE
+
+- PREPARE는 SQL문을 실행하지는 ㅇ낳고 미리 준비만 해놓음
+
+- EXECUTE는 준비한 SQL문을 실행함
+  
+  - 실행 후에는 DEALLOCATE PREFARE로 문장을 해제해주는 것이 바람직함
+
+- PREPARE 와 EXECUTE 문 예시
+
+```sql
+USE market_db;
+PREPARE myQuery FROM 'SELECT * FROM member WHERE mem_id = "BLK"';
+EXECUTE myQuery;
+DEALLOCATE PREPARE myQuery;
 ```
 
 
 
+- 동적 SQL을 이용한 출입문 시간 기록 코드 예시
+
+```sql
+DROP TABLE IF EXISTS gate_table;
+CREATE TABLE gate_table (id INT AUTO_INCREMENT PRIMARY KEY, every_time DATETIME);
+-- 출입문 테이블 생성, ID는 자동 생성, every_time은 출입 시간 기록
+
+-- 출입시간은 아래 set 부터 deallocate 까지 실행해야함
+SET @curDate = CURRENT_TIMESTAMP(); -- 현재 날짜와 시간 담을 변수
+
+PREPARE myQuery FROM 'INSERT INTO gate_table VALUES(NULL, ?)'; 
+-- 쿼리문을 미리 셋팅, ?는 현재시간을 입력할 자리
+EXECUTE myQuery USING @curDate; -- 현재시간을 매번 실행될 때마다 바꿔줌
+DEALLOCATE PREPARE myQuery;
+
+SELECT * FROM gate_table; -- 기록된 테이블 내용 호출
+
+```
 
 
 
+# 5장 테이블과 뷰
+
+## 05-1. 테이블 만들기
+
+- 테이블은 행(row)과 열(column)로 구성되어 있음
+
+- 테이블은 생성전 설계를 해야 함
+  
+  1. 열이름
+  
+  2. 데이터형식
+  
+  3. Null 허용 여부
+  
+  4. 기타 (기본 키(PK), 외래 키(FK), 자동증가, UNSIGNED 등)
+
+- FK는 연결된 테이블에 자료가 있어야 입력 가능함
 
 
 
+## 05-2. 제약조건으로 테이블을 견고하게
+
+- 제약조건 : 기본키(PK)나 외래키(FK)가 대표적인 제약조건임
+
+- 제약조건의 개념 : 데이터의 무결성을 지키기 위해 제한하는 조건. 아이디와 같은 하나만 존재해야 하는 데이터를 제약조건을 걸어야 함
+
+- 제약조건의 대표적인 종류
+  
+  - PRIMARY KEY : 기본키
+  
+  - FOREIGN KEY : 외래키
+  
+  - UNIQUE : 고유키
+  
+  - CHECK : 
+  
+  - DEFAULT : 
+  
+  - NULL 값 허용 : 
 
 
 
+- 기본 키(PK) 제약조건
+  
+  - 데이터를 구분할 수 있는 식별자를 의미함
+  
+  - 값은 중복될 수 없음
+  
+  - NULL값이 입력될 수 없음
+  
+  - 테이블에는 기본키 제약조건을 1개 지정할 수 있음
+  
+  - 기본키로 생성한 것은 자동으로 클러스터형 인덱스가 생성됨
+  
+  - 테이블은 기본키를 1개만 설정할 수 있음
 
 
 
+- 외래 키(FK) 제약조건
+  
+  - 두 테이블 사이의 관계를 연결
+  
+  - 데이터의 무결성을 보장
+  
+  - 외래 키가 설정된 열은 반드시 다른 테이블의 기본 키와 연결되어야 함
+  
+  - 참조 테이블이 참조하는 기준테이블의 열은 반드시 기본키나 고유키로 설정되어있어야 함
+  
+  - PK와 FK로 맺어질 경우 수정이나 삭제가 불가능해짐, 이는 데이터의 무결성을 보장해주기 위함임
+    
+    - 단, 모든 테이블의 PK와 FK로 연결된 데이터를 모두 바꿔주는 기능이 있음
+  
+  - ON UPDATE CASCADE : 모든 기준 테이블과 참조 테이블의 내용이 바뀜
+  
+  - ON DELETE CASCADE : 모든 기준 테이블과 참조 테이블의 내용이 삭제 됨
 
 
 
+- 기타 제약조건
+  
+  - 고유 키 제약조건 : 중복되지 않는 유일한 값을 입력해야 함. 기본 키와 다른점은 NULL값을 허용함.
+  
+  - 체크 제약조건 : 데이터 입력시 특정 범위나 특정 값만 입력되도록 하는 것. EX) 전화번호, 평균키
+  
+  - 기본값 정의 : 값이 입력되지 않을 경우 자동으로 입력될 값을 미리 지정해 놓는 방법
+  
+  - 널 값 허용 : 널 값을 허용하려면 생략하거나 NULL을 사용, 허용하지 않으려면 NOT NULL을 사용함. 단, PRIMARY KEY가 설정된 열에는 NULL값이 있을수 없으므로 자동으로 NOT NULL이 설정됨.
+    
+    - NULL 값은 '아무것도 없다'라는 의미로 공백('')이나 0과는 다름
+    
+    
+
+## 05-3. 가상의 테이블: 뷰
+
+### 뷰
+
+- 뷰는 데이터베이스 개체중 하나 (EX. 바로가기아이콘)
+
+- 뷰를 가상의 테이블이라고도 표현함
+
+### 뷰의 기본 생성
+
+- 뷰를 만드는 형식
+
+```sql
+CREATE VIEW 뷰_이
+AS
+    SELECT 문;
+```
+
+#### 뷰의 작동
+
+- 사용자는 뷰를 테이블이라고 생각하고 접근함
+
+- 뷰는 읽기전용으로 사용되지만, 뷰를 통해서 원본테이블의 데이터를 수정할 수도 있음(단, 조건을 만족해야 함)
+
+- 뷰를 사용하는 이유
+  
+  - 보안에 도움이 됨(개인정보 등을 제외한 정보가 포함되지 않음)
+  
+  - 복잡한 SQL을 단순하게 만들 수 있음
 
 
 
+#### 뷰의 실제 작동
+
+- 뷰도 별칭을 사용할 수 있음
+
+- 별칭은 AS를 붙여주면 코드가 명확해 보이는 장점이 있음
+
+```sql
+USE market_db;
+CREATE VIEW v_viewtest1
+AS
+    SELECT B.mem_id 'Member ID', M.mem_name AS 'Member Name', 
+            B.prod_name "Product Name", 
+            CONCAT(M.phone1, M.phone2) AS "Office Phone" 
+       FROM buy B
+         INNER JOIN member M
+         ON B.mem_id = M.mem_id;
+         
+SELECT  DISTINCT `Member ID`, `Member Name` FROM v_viewtest1; -- 백틱을 사용
+
+ALTER VIEW v_viewtest1
+AS
+    SELECT B.mem_id '회원 아이디', M.mem_name AS '회원 이름', 
+            B.prod_name "제품 이름", 
+            CONCAT(M.phone1, M.phone2) AS "연락처" 
+       FROM buy B
+         INNER JOIN member M
+         ON B.mem_id = M.mem_id;
+         
+SELECT  DISTINCT `회원 아이디`, `회원 이름` FROM v_viewtest1;  -- 백틱을 사용
+
+DROP VIEW v_viewtest1;
+```
 
 
 
+#### 뷰의 정보 확인
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+- 기존에 생성된 뷰에 대한 정보를 확인할 수 있음
 
 
 
