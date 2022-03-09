@@ -29,8 +29,21 @@
 ## DBMS에서 사용되는언어 : SQL
 
 - SQL은 관계형 데이터베이스에서 사용되는 언어로, '에스큐엘' 또는 '시퀄'로 읽음
-
 - 표준 SQL을 지정해서 언어의 통일성을 갖춤
+
+## **MySQL WorkBench - SQL 실행 단축키**
+
+**1개의 SQL문 실행**
+
+커서가 있는 1개의 SQL문을 실행 시키려면 [Ctrl+Enter]키를 누르면 된다.
+
+**여러개(다중) SQL문 실행**
+
+실행하고자 하는 SQL문들의 영역을 드래그한 후 [Ctrl+Shift+Enter]키를 누르면 된다.
+
+**SQL창의 전체 모두 실행**
+
+SQL창의 모든 SQL문을 실행시키려면 아무것도 선택하지 않고 [Ctrl+Shift+Enter]키를 누르면 된다.
 
 # 02-1. 데이터베이스 모델링
 
@@ -732,22 +745,22 @@ DROP PROCEDURE IF EXISTS caseProc;
 DELIMITER $$
 CREATE PROCEDURE caseProc()
 BEGIN
-	DECLARE point INT;
+    DECLARE point INT;
     DECLARE credit CHAR(1);
     SET point = 88;
-    
+
     CASE
-		WHEN point >= 90 THEN
-			SET credit = 'A';
-		WHEN point >= 80 THEN
-			SET credit = 'B';
-		WHEN point >= 70 THEN
-			SET credit = 'C';
-		WHEN point >= 60 THEN
-			SET credit = 'D';
-		ELSE
-			SET credit = 'F';
-	END CASE;
+        WHEN point >= 90 THEN
+            SET credit = 'A';
+        WHEN point >= 80 THEN
+            SET credit = 'B';
+        WHEN point >= 70 THEN
+            SET credit = 'C';
+        WHEN point >= 60 THEN
+            SET credit = 'D';
+        ELSE
+            SET credit = 'F';
+    END CASE;
     SELECT CONCAT('취득점수 : ', point), CONCAT('학점 : ', credit);
 END $$
 DELIMITER ;
@@ -758,10 +771,10 @@ CALL caseProc();
 
 ```sql
    SELECT B.mem_id, M.mem_name, SUM(price*amount) '총 구매액'
-	FROM buy B
-		INNER JOIN member M
+    FROM buy B
+        INNER JOIN member M
         ON B.mem_id = M.mem_id
-	GROUP BY B.mem_id
+    GROUP BY B.mem_id
     ORDER BY SUM(price*amount) DESC;
 ```
 
@@ -771,22 +784,20 @@ CALL caseProc();
 
 ```sql
 SELECT M.mem_id, M.mem_name, SUM(price*amount) '총 구매액',
-	CASE
-		WHEN(SUM(price*amount) >= 1500) THEN '최우수고객'
+    CASE
+        WHEN(SUM(price*amount) >= 1500) THEN '최우수고객'
         WHEN(SUM(price*amount) >= 1000) THEN '우수고객'
         WHEN(SUM(price*amount) >= 1) THEN '일반고객'
         ELSE '유령고객'
-	END '회원등급'
-	FROM buy B
-		RIGHT OUTER JOIN member M
+    END '회원등급'
+    FROM buy B
+        RIGHT OUTER JOIN member M
         ON B.mem_id = M.mem_id
-	GROUP BY M.mem_id
+    GROUP BY M.mem_id
     ORDER BY SUM(price*amount) DESC;
 ```
 
 ![8.PNG](D:\workspace\00.TIL\SQL\IMAGE\8.PNG)
-
-
 
 ## WHILE 문
 
@@ -796,7 +807,7 @@ SELECT M.mem_id, M.mem_name, SUM(price*amount) '총 구매액',
 
 ```sql
 WHILE <조건식> DO
-	SQL 문장들
+    SQL 문장들
 END WHILE;
 ```
 
@@ -804,15 +815,15 @@ END WHILE;
 
 ```sql
 BEGIN
-	DECLARE i INT; -- 1에서 100까지 증가할 변수
+    DECLARE i INT; -- 1에서 100까지 증가할 변수
     DECLARE hap INT; -- 더한 값을 누적할 변수
     SET i = 1;
     SET hap = 0;
-    
+
     WHILE (i <= 100) DO
-		SET hap = hap + i; -- hap의 원래의 값에 i를 더해서 다시 hap에 넣음
+        SET hap = hap + i; -- hap의 원래의 값에 i를 더해서 다시 hap에 넣음
         SET i = i + 1; -- i의 원래의 값에 1을 더해서 다시 i에 넣음
-	END WHILE;
+    END WHILE;
     SELECT '1부터 100까지의 합', hap;
 END $$
 DELIMITER ;
@@ -830,43 +841,38 @@ DROP PROCEDURE IF EXISTS whileProc2;
 DELIMITER $$
 CREATE PROCEDURE whileProc2()
 BEGIN
-	DECLARE i INT; -- 1에서 100까지 증가할 변수
+    DECLARE i INT; -- 1에서 100까지 증가할 변수
     DECLARE hap INT; -- 더한 값을 누적할 변수
     SET i = 1;
     SET hap = 0;
-    
+
     myWhile:
     WHILE (i <= 100) DO -- While문에 label을 지정
-		IF (i%4 = 0) THEN
-			SET i = i + 1;
+        IF (i%4 = 0) THEN
+            SET i = i + 1;
             ITERATE myWhile; -- 지정한 label문으로 가서 계속 진행
-		END IF;
+        END IF;
 
-		SET hap = hap + i; -- hap의 원래의 값에 i를 더해서 다시 hap에 넣음
+        SET hap = hap + i; -- hap의 원래의 값에 i를 더해서 다시 hap에 넣음
         IF (hap > 1000) THEN
-			LEAVE myWhile; -- 지정한 label문을 떠남. 즉 while 문을 종료함
-		END IF;
-        
+            LEAVE myWhile; -- 지정한 label문을 떠남. 즉 while 문을 종료함
+        END IF;
+
         SET i = i + 1; -- i의 원래의 값에 1을 더해서 다시 i에 넣음
-	END WHILE;
+    END WHILE;
     SELECT '1부터 100까지의 합(4의배수 제외), 1000넘으면 종료 : ', hap;
 END $$
 DELIMITER ;
 CALL whileProc2();
-
 ```
 
 ![9.PNG](D:\workspace\00.TIL\SQL\IMAGE\9.PNG)
-
-
 
 ## 동적 SQL
 
 - SQL문은 내용이 고정되어 있는 경우가 대부분임
 
 - 상황에 따라 내용 변경이 필요할때 동적 SQL을 사용하면 변경되는 내용을 실시간으로 적용시켜 사용할 수 있음
-
-
 
 ### PREPARE 와 EXECUTE
 
@@ -885,8 +891,6 @@ EXECUTE myQuery;
 DEALLOCATE PREPARE myQuery;
 ```
 
-
-
 - 동적 SQL을 이용한 출입문 시간 기록 코드 예시
 
 ```sql
@@ -903,10 +907,7 @@ EXECUTE myQuery USING @curDate; -- 현재시간을 매번 실행될 때마다 �
 DEALLOCATE PREPARE myQuery;
 
 SELECT * FROM gate_table; -- 기록된 테이블 내용 호출
-
 ```
-
-
 
 # 5장 테이블과 뷰
 
@@ -925,8 +926,6 @@ SELECT * FROM gate_table; -- 기록된 테이블 내용 호출
   4. 기타 (기본 키(PK), 외래 키(FK), 자동증가, UNSIGNED 등)
 
 - FK는 연결된 테이블에 자료가 있어야 입력 가능함
-
-
 
 ## 05-2. 제약조건으로 테이블을 견고하게
 
@@ -948,8 +947,6 @@ SELECT * FROM gate_table; -- 기록된 테이블 내용 호출
   
   - NULL 값 허용 : 
 
-
-
 - 기본 키(PK) 제약조건
   
   - 데이터를 구분할 수 있는 식별자를 의미함
@@ -963,8 +960,6 @@ SELECT * FROM gate_table; -- 기록된 테이블 내용 호출
   - 기본키로 생성한 것은 자동으로 클러스터형 인덱스가 생성됨
   
   - 테이블은 기본키를 1개만 설정할 수 있음
-
-
 
 - 외래 키(FK) 제약조건
   
@@ -984,8 +979,6 @@ SELECT * FROM gate_table; -- 기록된 테이블 내용 호출
   
   - ON DELETE CASCADE : 모든 기준 테이블과 참조 테이블의 내용이 삭제 됨
 
-
-
 - 기타 제약조건
   
   - 고유 키 제약조건 : 중복되지 않는 유일한 값을 입력해야 함. 기본 키와 다른점은 NULL값을 허용함.
@@ -997,8 +990,6 @@ SELECT * FROM gate_table; -- 기록된 테이블 내용 호출
   - 널 값 허용 : 널 값을 허용하려면 생략하거나 NULL을 사용, 허용하지 않으려면 NOT NULL을 사용함. 단, PRIMARY KEY가 설정된 열에는 NULL값이 있을수 없으므로 자동으로 NOT NULL이 설정됨.
     
     - NULL 값은 '아무것도 없다'라는 의미로 공백('')이나 0과는 다름
-    
-    
 
 ## 05-3. 가상의 테이블: 뷰
 
@@ -1030,8 +1021,6 @@ AS
   
   - 복잡한 SQL을 단순하게 만들 수 있음
 
-
-
 #### 뷰의 실제 작동
 
 - 뷰도 별칭을 사용할 수 있음
@@ -1048,7 +1037,7 @@ AS
        FROM buy B
          INNER JOIN member M
          ON B.mem_id = M.mem_id;
-         
+
 SELECT  DISTINCT `Member ID`, `Member Name` FROM v_viewtest1; -- 백틱을 사용
 
 ALTER VIEW v_viewtest1
@@ -1059,17 +1048,507 @@ AS
        FROM buy B
          INNER JOIN member M
          ON B.mem_id = M.mem_id;
-         
+
 SELECT  DISTINCT `회원 아이디`, `회원 이름` FROM v_viewtest1;  -- 백틱을 사용
 
 DROP VIEW v_viewtest1;
 ```
 
-
-
 #### 뷰의 정보 확인
 
 - 기존에 생성된 뷰에 대한 정보를 확인할 수 있음
+
+
+
+# 06. 인덱스
+
+## 06-1. 인덱스 개념을 파악하자
+
+### 인덱스의 개념
+
+- 책의 목차와 같은 역할을 함
+
+- 요약된 정보로 좀더 빠르게 정보를 찾을 수 있음
+
+
+
+### 인덱스의 문제점
+
+- 인덱스를 너무 많이 사용할 경우 오히려 시스템이 느려짐
+
+
+
+### 인덱스의 장점과 단점
+
+- 장점 : SELECT 문으로 검색하는 속도가 매우 빨라짐
+  
+  - 그 결과 컴퓨터의 부담이 줄어 전체 시스템의 성능이 향상됨
+
+- 단점 : 인덱스도 공간을 차지해서 데이터베이스 안에 추가적인 공간이 필요함
+  
+  - 대략 10%정도의 공간이 추가로 필요함
+  
+  - 처음 인덱스를 만들시 시간이 오래 걸릴 수 있음
+  
+  - SELECT가 아닌 데이터의 변경작업(INSERT, UPDATE, DELETE)이 자주 일어나면 오히려 성능이 나빠질 수 있음
+
+
+
+## 인덱스의 종류
+
+- 클러스터형 인덱스와 보조 인덱스가 있음
+  
+  - 클러스터형 인덱스 : 영어사전, 국어사전과 같음, 책자체가 인덱스임 (기본키)
+  
+  - 보조 인덱스 : 일반 책의 뒤에 찾아보기와 같음, 책 내용 뒤에 인덱스가 있음 (유니크)
+
+- 자동으로 생성되는 인덱스 : 자동으로 생성될떄 클러스터형과 보조형중 알아서 생성됨 (기본키가 인덱스가 됨)
+
+- 자동으로 정렬되는 클러스터형 인덱스 : 기본키로 지정하면 자동으로 생성됨
+
+- 정렬되지 않는 보조 인덱스 : 고유 키로 지정하면 보조 인덱스가 됨.
+
+
+
+# 07 스토어드 프로시저
+
+## 07-1 스토어드 프로시저 사용방법
+
+- 스토어드 프로시저 : SQL에 프로그래밍 기능을 추가해 일반 프로그래밍 언어와 비슷한 효과를 내는 것
+  - SQL + 프로그래밍 언어
+
+### 스토어드 프로시저 기본
+
+#### 스토어드 프로시저의 개념과 형식
+
+- 스토어드 프로시저는 MySQL에서 제공하는 프로그래밍 기능
+- MySQL 내부에서 사용할 때 적절한 프로그래밍 기능을 제공해 줌
+- 스토어드 프로시저 사용 형식
+
+```sql
+-- 스토어드 프로시저 형식을 만듬
+DELIMITER $$
+CREATE PROCEDURE 스토어드_프로시저_이름( IN 또는 OUT 매개변수)
+BEGIN
+
+	이 부분에 SQL 프로그래밍 코드를 작성
+	
+END $$
+DELIMITER;
+
+-- 스토어드 프로시저를 실행하는 코드
+CALL 스토어드_프로시저_이름();
+
+-- 스토어드 프로시저를 삭제하는 코드
+DROP PROCEDURE 스토어드_프로시저_이름;
+```
+
+
+
+#### 매개변수의 사용
+
+- 스토어드 프로시저에서 실행시 **입력 매개변수**를 지정할 수 있음
+  - 입력 매개변수(PARAMETER)
+
+```SQL
+-- 입력 매개변수 형식
+IN 입력_매개변수_이름 데이터_형식
+
+-- 입력 매개변수가 있는 스토어드 프로시저를 실행하기 위한 호출 형식
+CALL 프로시저_이름(전달_값);
+```
+
+- 출력 매개변수 : 처리된 결과를 출력매개변수를 통해 얻을 수 있음
+
+```SQL
+-- 출력 매개변수 형식
+OUT 출력_매개변수_이름 데이터_형식
+
+-- 출력 매개변수가 있는 스토어드 프로시저를 실행하기 위한 형식
+CALL 프로시저_이름(@변수명);
+SELECT @변수명;
+```
+
+
+
+## 07-3. 자동 실행되는 트리거
+
+#### 트리거 기본
+
+- 방아쇠라는 의미로, 작업을 자동으로 수행하여 사용자가 추가 작업을 잊어버리는 실수를 방지해줌
+
+#### 트리거 개요
+
+- INSERT, UPDATE, DELETE 작업이 발생하면 실행되는 코드
+
+#### 트리거의 기본 작동
+
+- DML(Data Manipulation, Language)문 (INSERT, UPDATE, DELETE 등)의 이벤트가 발생할 때 작동함
+
+#### 트리거 활용
+
+- 트리거는 테이블에 입력/수정/삭제되는 정보를 백업하는 용도로 활용할 수 있음
+
+
+
+# 08. SQL과 파이썬 연결
+
+## 08-2. 파이썬과 MySQL의 연동
+
+![10](D:\workspace\00.TIL\SQL\IMAGE\10.png)
+
+- 파이썬으로 연동하는 코드
+
+```python
+# 파이썬에서 pymysql 모듈 호출
+import pymysql
+# conn 변수에 pymysql.connect로 호스트아이피, 유저아이디, 비밀번호, 데이터베이스, 유니코드 설정
+conn = pymysql.connect(host='127.0.0.1', user='root', password='0000', db='soloDB', charset='utf8')
+# cur 변수에 cursor()를 사용해 연결
+cur=conn.cursor()
+# cur.excute로 테이블을 생성하는 sql쿼리문 입력
+cur.execute("CREATE TABLE userTable (id char(4), userName char(15), email char(20), birthYear int)")
+# 0은 이상없이 입력되었다는 의미
+>>> 0
+# cur.excute로 데이터 입력 sql쿼리문 입력
+cur.execute("INSERT INTO userTable VALUES('hong', '홍지윤', 'hong@naver.com', 1996)")
+# 1은 정상적으로 입력되었다는 의미
+>>> 1
+cur.execute("INSERT INTO userTable VALUES('kim', '김태연', 'kim@naver.com', 2011)")
+>>> 1
+cur.execute("INSERT INTO userTable VALUES('star', '별사랑', 'star@naver.com', 1990)")
+>>> 1
+cur.execute("INSERT INTO userTable VALUES('yang', '양지은', 'yang@naver.com', 1993)")
+>>> 1
+# 입력이 다 되었다면, conn.commit()으로 변경 내용을 최종 기록명령
+conn.commit()
+# 입력이 끝났다면 접속 종료명령 conn.close()
+conn.close()
+```
+
+- 파이썬 입력 자동화 코드
+
+```python
+import pymysql
+
+# 전역 변수 선언부
+conn, cur = None, None
+data1, data2, data3, data4 = '', '', '', ''
+sql = ''
+
+# 메인 코드
+conn = pymysql.connect(host='127.0.0.1', user='root', password='0000', db='soloDB', charset='utf8')
+cur=conn.cursor()
+
+while (True):
+    data1 = input('사용자 ID ==>')
+    if data1 == '':
+        break;
+    data2 = input('사용자 이름 ==>')
+    data3 = input('사용자 이메일 ==>')
+    data4 = input('사용자 출생연도 ==>')
+    sql = "INSERT INTO userTable VALUES('"+data1+"','"+data2+"','"+data3+"','"+data4+")"
+    cur.execute(sql)
+conn.commit()
+conn.close()
+```
+
+
+
+#### 08-3. GUI 응용 프로그램
+
+- GUI는 윈도우에 그래픽 환경으로 제공되는 화면을 통들어 말함
+- 윈도우에 환면을 구성하는 기본적인 코드 양식
+
+```python
+from tkinter import *
+
+root = Tk()
+
+# 이 부분에서 화면을 구성하고 처리합니다
+
+root.mainloop()
+```
+
+
+
+- 창의 제목 및 크기 변경
+
+```python
+from tkinter import *
+
+root = Tk()
+root.title("혼공 GUI 연습")
+root.geometry("400x200")
+
+root.mainloop()
+
+```
+
+
+
+- 창의 내용 출력 설정
+
+```python
+from tkinter import *
+root = Tk()
+root.geometry("300x100")
+
+# 라벨에 텍스트와 글씨체, 배경색, 글씨색을 지정할 수 있음
+label1 = Label(root, text="혼공 SQL은")
+label2 = Label(root, text="쉽습니다.", font=("궁서체", 30), bg="blue", fg="yellow")
+
+# 지정된 라벨을 .pack()을 붙여야 화면에 출력됨
+label1.pack()
+label2.pack()
+
+root.mainloop()
+```
+
+![11](D:\workspace\00.TIL\SQL\IMAGE\11.png)
+
+
+
+- 창의 버튼을 만드는 코드
+
+```python
+from tkinter import *
+# 버튼을 넣기 위한 메시지박스 import
+from tkinter import messagebox
+
+# 버튼을 눌렀을때 작동할 기능 설정
+def clickButton() :
+    # showinfo ('창 제목', '창의 내용')
+    messagebox.showinfo('버튼 클릭', '버튼을 눌렀습니다..')
+
+root = Tk()
+root.geometry("200x200")
+
+# 윈도우 창에 띄울 text, fg 글씨색, bg 배경색, command=기능설정 (clickbutton : 버튼생성)
+button1 = Button(root, text="여기를 클릭하세요", fg="red", bg="yellow", command=clickButton)
+button1.pack(expand = 1)
+
+root.mainloop()
+```
+
+![12](D:\workspace\00.TIL\SQL\IMAGE\12.png)
+
+- 버튼을 여러개, 간격을 줘서 만들기
+
+```python
+from tkinter import *
+root = Tk()
+
+# 버튼의 이름을 지정해 생성
+button1 = Button(root, text="혼공1")
+button2 = Button(root, text="혼공2")
+button3 = Button(root, text="혼공3")
+
+# 버튼.pack(side= top OR left or Right 로 나올 위치 지정, 
+#			padx = x축의 여분공간 크기, pady= y축의 여분공간 크기)
+button1.pack(side=TOP, fill=X, padx=10, pady=10)
+button2.pack(side=TOP, fill=X, padx=10, pady=10)
+button3.pack(side=TOP, fill=X, padx=10, pady=10)
+
+root.mainloop()
+
+```
+
+![13](D:\workspace\00.TIL\SQL\IMAGE\13.png)
+
+- 윈도우에 화면 위, 아래의 기능 분할하기
+
+```python
+from tkinter import *
+root = Tk()
+root.geometry("200x250")
+# upFrame 위쪽 구역을 나눔
+upFrame = Frame(root)
+upFrame.pack()
+# downFrame 아래쪽 구역을 나
+downFrame = Frame(root)
+downFrame.pack()
+
+# upFrame 부분에 Entry 는 입력창을 넣음
+editBox = Entry(upFrame, width = 10, )
+editBox.pack(padx = 20, pady = 20)
+
+# downFrame에 리스트 박스를 넣음
+listbox = Listbox(downFrame, bg = 'yellow');
+listbox.pack()
+
+listbox.insert(END, "하나")
+listbox.insert(END, "둘")
+listbox.insert(END, "셋")
+
+root.mainloop()
+
+```
+
+
+
+![14](D:\workspace\00.TIL\SQL\IMAGE\14.png)
+
+- 최종 버전의 GUI입력 기능을 가진 코드
+
+```python
+import pymysql
+from tkinter import *
+from tkinter import messagebox
+
+## 메인 코드부
+def insertData() :
+    con, cur = None, None
+    data1, data2, data3, data4 = "", "", "", ""
+    sql=""
+
+    conn = pymysql.connect(host='127.0.0.1', user='root', password='0000', db='soloDB', charset='utf8')
+    cur = conn.cursor()
+
+    data1 = edt1.get();    data2 = edt2.get();    data3 = edt3.get();    data4 = edt4.get()
+    sql = "INSERT INTO userTable VALUES('" + data1 + "','" + data2 + "','" + data3 + "'," + data4 + ")"
+    cur.execute(sql)
+
+    conn.commit()
+    conn.close()
+
+    messagebox.showinfo('성공', '데이터 입력 성공')
+
+
+def selectData() :
+    strData1, strData2, strData3, strData4  = [], [], [], []
+
+    conn = pymysql.connect(host='127.0.0.1', user='root', password='0000', db='soloDB', charset='utf8')
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM userTable")
+    
+    strData1.append("사용자 ID");      strData2.append("사용자 이름")
+    strData3.append("사용자 이메일");   strData4.append("사용자 출생연도")
+    strData1.append("-----------");    strData2.append("-----------")
+    strData3.append("-----------");    strData4.append("-----------")
+    
+    while (True) :
+        row = cur.fetchone()
+        if row== None :
+            break;
+        strData1.append(row[0]);        strData2.append(row[1])
+        strData3.append(row[2]);        strData4.append(row[3])
+
+    listData1.delete(0,listData1.size() - 1);    listData2.delete(0,listData2.size() - 1)
+    listData3.delete(0,listData3.size() - 1);    listData4.delete(0,listData4.size() - 1)
+    
+    for item1, item2, item3, item4 in zip(strData1, strData2, strData3, strData4 ):
+        listData1.insert(END, item1);        listData2.insert(END, item2)
+        listData3.insert(END, item3);        listData4.insert(END, item4)
+        
+    conn.close()    
+
+
+## 메인 코드부
+root = Tk()
+root.geometry("600x300")
+root.title("완전한 GUI 응용 프로그램")
+
+edtFrame = Frame(root);
+edtFrame.pack()
+listFrame = Frame(root)
+listFrame.pack(side = BOTTOM,fill=BOTH, expand=1)
+
+edt1= Entry(edtFrame, width=10);    edt1.pack(side=LEFT,padx=10,pady=10)
+edt2= Entry(edtFrame, width=10);    edt2.pack(side=LEFT,padx=10,pady=10)
+edt3= Entry(edtFrame, width=10);    edt3.pack(side=LEFT,padx=10,pady=10)
+edt4= Entry(edtFrame, width=10);    edt4.pack(side=LEFT,padx=10,pady=10)
+
+btnInsert = Button(edtFrame, text="입력", command = insertData)
+btnInsert.pack(side=LEFT,padx=10,pady=10)
+btnSelect = Button(edtFrame, text="조회", command =selectData )
+btnSelect.pack(side=LEFT,padx=10,pady=10)
+
+listData1 = Listbox(listFrame,bg = 'yellow');
+listData1.pack(side=LEFT,fill=BOTH, expand=1)
+listData2 = Listbox(listFrame,bg = 'yellow')
+listData2.pack(side=LEFT,fill=BOTH, expand=1)
+listData3 = Listbox(listFrame,bg = 'yellow')
+listData3.pack(side=LEFT,fill=BOTH, expand=1)
+listData4 = Listbox(listFrame,bg = 'yellow')
+listData4.pack(side=LEFT,fill=BOTH, expand=1)
+
+root.mainloop()
+
+```
+
+- 실행 화면
+
+![15](D:\workspace\00.TIL\SQL\IMAGE\15.png)
+
+- 조회 버튼 누름
+
+![16](D:\workspace\00.TIL\SQL\IMAGE\16.png)
+
+- 입력 칸에 데이터 입력 후 입력 버튼 누름
+
+![17](D:\workspace\00.TIL\SQL\IMAGE\17.png)
+
+- 조회
+
+![18](D:\workspace\00.TIL\SQL\IMAGE\18.png)
+
+
+
+끝.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
