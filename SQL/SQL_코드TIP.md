@@ -17,8 +17,13 @@ SELECT 조회할 열1, 조회할 열2, ... FROM 테이블명;
 	-- 조회시 특정 조건과 일치/제외 값만 조회
 	WHERE 열이름 = '검색할값'
 	WHERE 열이름 != '제외할값'
+	-- 2가지 이상 검색
+	WHERE IN('1조건', '2조건')
+	
     -- 조회시 그룹바이로 지정한 열이 있을 경우 해당 열 기준 정렬을 해줌
 	GROUP BY 열이름;
+	-- 특정 개수 제한 / (DISTINCT 중복을 열 이름 제거) 1개 이상인 열 조회
+	HAVING COUNT(DISTINCT 열이름)	> 1;
 	-- 조회시 내림차순 정렬, 기본 오름차순 셋팅(ASC)	
 	ORDER BY 열이름 DESC;
 	-- 정렬 조회시 2가지 조건, 1가지가 겹칠 경우 다음 우선순위 설정 가능
@@ -38,7 +43,6 @@ SELECT COUNT(열이름) FROM 테이블명;
 -- 중복 제거 DISTINCT
 SELECT COUNT(DISTINCT 열이름) FROM 테이블명;
 -- 특정 항목의 개수
--- 코드를 입력하세요
 SELECT DISTINCT 열이름, COUNT(*) FROM 테이블명
     GROUP BY 특정항목열  -- 특정항목으로 구분된 열일 경우
     ORDER BY 특정항목열
@@ -212,4 +216,193 @@ SELECT ANIMAL_ID, NAME, DATE_FORMAT(DATETIME, '%Y-%m-%d') FROM ANIMAL_INS
     ORDER BY ANIMAL_ID
 ;
 ```
+
+
+
+# 6. 이 외
+
+```SQL
+# IF
+	# SELECT, WHERE 절에서 사용 가능
+SELECT IF(10 > 5, '크다', '작다') AS result;
+
+# LIKE
+	# WHERE 절과 함께 특정 패턴을 검색할 때 사용
+SELECT *
+FROM Student
+WHERE Student_ID like 'a%';
+
+LIKE 'a%' -- a로 시작되는 모든 것
+LIKE 'a_%_%' -- a로 시작되고 최소 3이상의 길이를 가진 것
+LIKE '_a%' -- 두번째 자리에 a가 들어가는 모든 것
+
+# IN
+	# WHERE 절 내 여러 값을 설정하고자 할 때 사용
+	# 연산속도가 상대적으로 빠름
+	# OR 연산과 유사한 효과
+select *
+from Customers
+where country in ('UK', 'Korea') -- Customers 중 country가 UK이거나 KOREA인 것 다 뽑기
+
+# Between
+	# where 절과 내 검색 조건으로 범위를 지정하고자 할 때 사용
+	# between 이상 and 이하;
+
+select *
+from products
+where price between 10 and 20;
+
+select *
+from products
+where price not between 10 and 20;
+
+select *
+from products
+where (price between 10 and 20) and not  id in(2,3); -- 이렇게 쓸 수도 있다
+
+# CASE 문
+CASE
+	WHEN 조건1 THEN '조건1 반환값'
+	WHEN 조건2 THEN '조건2 반환값'
+	ELSE '충족되는 조건 없을때 반환값'
+END
+
+# WHEN ~ TEHN 세트
+	# SELECT, WHERE, ORDER BY 에서 사용 가능하며, 보통 SLELECT 절에서 많이 사용 함
+	# 주의 : ELSE를 생략하면 결과 값이 NULL이 나옴
+SELECT 
+    seq, 
+    CASE
+        WHEN (u.seq BETWEEN 1 AND 3) THEN 
+            CASE 
+                WHEN (u.enabled IS TRUE) THEN 'A+'
+                ELSE 'A0'
+            END 
+        WHEN (u.seq BETWEEN 4 AND 6) THEN
+            CASE 
+                WHEN (u.enabled IS TRUE) THEN 'B+'
+                ELSE 'B0'
+            END
+        ELSE 'C+'
+    END AS case_result
+FROM `user` u
+
+# Limit
+-- 조건식이 있는 경우
+SELECT -- 열명 
+FROM -- 테이블명 
+WHERE -- 조건식 
+LIMIT -- 행수     
+
+-- 조건식이 없는 경우
+SELECT -- 열명
+FROM -- 테이블명
+LIMIT -- 행수                  
+
+
+-- 지정한 숫자 개수 리턴
+SELECT *
+FROM
+LIMIT 0,3; -- 0번부터 3개
+
+# GROUP BY
+	# 집계함수와 함게 사용되며 결과를 지정한 컬럼에 따라 그룹으로 묶고자 할때 사용
+select count(id)
+from customers
+group by country -- 각 도시에 사는 사람이 몇명인지
+
+# MIN(), MAX(), COUNT(), AVG(), SUM()
+	# 집계함수
+	# SELECT 에서 사용
+	# COUNT : NULL은 숫자로 세지 않는다
+select count(id) from products; -- ID 갯수 
+select avg(price) from products; 
+select sum(price) from products;
+
+	# 문제 : 평균 잔고(balance) 가 700이상인 지점의 이름과 평균 잔고를 구하라
+select branch_name, avg(balance)
+from account
+group by branch_name 
+having avg(balance) >= 700;
+
+# UNION - 예제 찾아보기
+# SELECT의 칼럼 리스트를 기준으로 두 개 이상의 결과를 하나의 테이블로 합칠때 사용
+	# 기본적으로 중복값을 제거함
+	# 중복값을 포함하고 싶은 경우 UNION ALL을 사용함
+select *
+from customers
+union
+select city from orders
+order by city;
+
+# JOIN
+# INNER JOIN : 교집합
+select test1.number from test1 
+join test2 
+on test1.number = test2.number;
+	# test1 과 test2 의 number 컬럼을 서로 비교하여 중첩되는 값이 존재하면 test1.number 컬럼의 중첩 값만 출력한다.
+
+	# 동일 테이블의 조인 결과를 구할 때도 쓴다.
+	# 문제 : 우유와 요거트를 동시에 구입한 장바구니가 있는지 알아보려 합니다. 우유와 요거트를 동시에 구입한 장바구니의 아이디를 조회하는 SQL 문을 작성해주세요. 이때 결과는 장바구니의 아이디 순으로 나와야 합니다.
+select distinct c.cart_id from cart_products c 
+inner join cart_products p 
+on(c.cart_id=p.cart_id) 
+where (c.name='우유' and p.name='요거트') 
+or (c.name='요거트'and p.name='우유') 
+order by c.cart_id
+;
+	# 문제 : 지갑과 맥북프로를 동시에 구매한 ID를 조회하시오. 단, 아이디는 1개만 출력되게 하시오. 출력은 멤버아이디 순서로 출력해야 합니다.
+SELECT B.MEM_ID FROM BUY B
+	INNER JOIN BUY C
+    ON B.MEM_ID = C.MEM_ID
+    WHERE (B.PROD_NAME = '지갑' AND C.PROD_NAME = '맥북프로')
+    OR (B.PROD_NAME = '맥북프로' AND C.PROD_NAME = '지갑')
+    GROUP BY B.MEM_ID
+    HAVING COUNT(B.PROD_NAME) > 1
+    ORDER BY B.MEM_ID
+;
+
+# LEFT JOIN : 왼쪽 기준
+select test1.number from test1 
+left join test2 
+on test1.number = test2.number;
+
+# RIGHT JOIN : 오른쪽 기준
+
+	# test1.number 컬럼을 출력하는 경우
+select test1.number from test1 
+right join test2 
+on test1.number = test2.number;
+
+	# test2.number 컬럼을 출력하는 경우
+select test2.number from test1 
+right join test2 
+on test1.number = test2.number;
+
+# OUTER JOIN : 매칭되는 값이 없어도 출력
+
+select test1.*, test2.number from test1 
+left outer join test2 
+on test1.number = test2.number;
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
