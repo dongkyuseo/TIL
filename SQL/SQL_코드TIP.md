@@ -4,11 +4,14 @@
 -- SELCET 절의 형식
 SELECT 열_이름 			-- 출력할 열 조건, *은 전체 열선택, 이외 열이름 입력
       FROM 테이블_이름 	   -- 베이스가 될 테이블 이름 선택
-      WHERE 조건식  		-- 특정 조건 부합 여부
+      WHERE 조건식  		-- 특정 조건 부합 여부 # =, !=, AND, OR, NOT, LIKE, BETWEEN, IN
+      JOIN 테이블_이름      -- 테이블 연결 ON조건에 맞춰서, INNER JOIN, LEFT JOIN, RIGHT JOIN, 
+      					 					 --     LEFT OUTER JOIN, RIGHT OUTER JOIN
+      ON A테이블.키 = B테이블.키 -- A테이블과 B테이블의 공통 키를 조건으로 연결
       GROUP BY 열_이름		-- 특정 열 선택
       HAVING 조건식		-- 그룹바이로 선택된 열에 특정 조건을 만족하는 데이터 출력
       ORDER BY 열_이름	  	 -- 정렬 내림차순(DESC) / 오름차순(ASC) 기본 셋팅되어 있음
-      LIMIT 숫자      	 -- 출력 갯수 제한
+      LIMIT 숫자      	 -- 출력 갯수 제한 # LIMIT 숫자 OFFSET 숫자 = 앞에 건너뛸 갯수
       
 -- 모든 코드 조 회하기
 SELECT * FROM 테이블명;
@@ -30,7 +33,10 @@ SELECT 조회할 열1, 조회할 열2, ... FROM 테이블명;
 	ORDER BY 열이름1 ASC, 열이름2 DESC;
 	-- 조회시 출력 개수 제한
 	LIMIT 제한수;
-	
+
+-- GROUP_CONCAT(열이름) 으로 조회시 각 데이터가,로 구분되어 한칸에 표시됨
+SELECT GROUP_CONCAT(NAME) FROM city
+	WHERE CountryCode='kor';
 ```
 
 
@@ -230,7 +236,10 @@ SELECT IF(10 > 5, '크다', '작다') AS result;
 	# WHERE 절과 함께 특정 패턴을 검색할 때 사용
 SELECT *
 FROM Student
-WHERE Student_ID like 'a%';
+# % 의 사용법
+WHERE Student_ID like 'a%'; -- %는 a로 시작하는 단어 전체 조회
+# _ 의 사용법 : 단어 한칸 랜덤의 의미
+WHERE Student_ID like 'a_c%' -- a?c 3글자중 a와c사이에 한글자는 랜덤, 해당단어 포함하는 단어 전체 조회
 
 LIKE 'a%' -- a로 시작되는 모든 것
 LIKE 'a_%_%' -- a로 시작되고 최소 3이상의 길이를 가진 것
@@ -384,6 +393,20 @@ on test1.number = test2.number;
 select test1.*, test2.number from test1 
 left outer join test2 
 on test1.number = test2.number;
+
+# 날짜 관련 코드
+SELECT NOW(), CURDATE(), CURTIME(); -- NOW 현재 날짜 시간, CURDATE 현재 날짜, CURTIME 현재 시간
+
+SELECT NOW(), CURDATE(), CURTIME(); -- NOW 현재 날짜 시간, CURDATE 현재 날짜, CURTIME 현재 시간
+
+SELECT DATE_ADD(NOW(), INTERVAL 2 MONTH); -- 2달후 계산
+SELECT DATE_ADD(NOW(), INTERVAL 5 DAY); -- 5일후 계산
+
+SELECT TO_DAYS(CURDATE()); -- 0년 0월 0일 부터 오늘까지의 일수 계산
+SELECT TO_DAYS(NOW());
+SELECT TO_DAYS('2022-11-18') - TO_DAYS(NOW()); -- D-DAY 계산
+SELECT DAYOFWEEK(dt) FROM DATE_TABLE; -- 요일을 숫자로 표시, 일요일:1, 월요일:2, 화:3, 수:4, 목:5, 금:6, 토:7
+
 ```
 
 
