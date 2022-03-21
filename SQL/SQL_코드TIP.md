@@ -427,5 +427,3 @@ SELECT DAYOFWEEK(dt) FROM DATE_TABLE; -- 요일을 숫자로 표시, 일요일:1
 
 
 
-
-
