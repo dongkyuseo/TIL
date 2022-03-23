@@ -172,21 +172,182 @@ SELECT addr FROM usertbl; -- DISTINCT 없이 조회시 모든 값 출력(중복 
 SELECT DISTINCT addr FROM usertbl; -- DISTINCT로 조회할 경우 중복값 제거해 1개의 값만 보여줌
 ```
 
+- GROUP BY 및 HAVING 그리고 집계 함수
+  - 그룹으로 묶어주는 역할
+
+```SQL
+SELECT userID AS '사용자', SUM(price*amount) AS '총구매액'  -- 묶을열선택, 값 출력 형식 함수로 지정
+   FROM buytbl 
+   GROUP BY userID ; -- 묶어줄 열 이름을 지정
+   
+SELECT userID AS '사용자', SUM(price*amount) AS '총구매액'  
+   FROM buytbl 
+   GROUP BY userID
+   HAVING SUM(price*amount) > 1000 ; -- 그룹바이로 지정한 열에 추가 조건을 지정 (WHERE절에 거는 조건문)
+```
+
+- ROLLUP
+  - 총합 또는 중간 합계 필요시 GROUP BY 절과 함께 WITH ROLLUP문을 사용
+
+```sql
+SELECT groupName, SUM(price * amount) AS '비용' 
+   FROM buytbl
+   GROUP BY  groupName
+   WITH ROLLUP; -- 그룹바이로 지정된 열 기준으로 중간 합계, 총합을 계산해줌
+```
 
 
 
+### SQL의 분류
+
+### DML / SELECT, INSERT, UPDATE, DELETE
+
+- Data Manipulation Language: 데이터 조작 언어
+  - 데이터를 조작(선택, 삽입, 수정, 삭제)하는 데 사용되는 언어임. DML 구문이 사용되는 대상은 테이블의 행임. 
+  - 트랜잭션이 발생하는 SQL임
+  - 트랜잭션(Transactions) : 테이블의 데이터를 변경할 때 실제 테이블에 완전히 적용하지 않고, 임시로 적용시키는 것 (실수 할 경우 취소 가능)
+
+### DDL / CREATE, DROP, ALTER
+
+- Data Definition Language: 데이터 정의 언어
+  - 데이터베이스, 테이블, 뷰, 인덱스 등의 데이터베이스 개체를 생성/삭제/변경 하는 역할
+  - DDL은 트랜잭션을 발생시키지 않음
+    - 되돌리거나 완전적용(COMMIT)을 시킬 수 없음. = 즉시 적용
+
+### DCL / GRANT, REVOKE, DENY
+
+- Data Control Language : 데이터 제어 언어
+  - 사용자에게 권한을 부여하거나 뺏을때 주로 사용하는 구문
+
+### 데이터의 변경을 위한 SQL문
+
+### 데이터의 삽입: INSERT
+
+```sql
+-- 데이터 삽입의 기본 구문
+INSERT [INTO] 테이블 [(열이름1, 2, 3 ...)] VALUES (값1, 2, 3 ....)
+```
+
+- 자동으로 증가하는 AUTO_INCREMENT
+  - 테이블의 속성이 AUTO_INCREMENT로 지정될 경우 자동으로 1부터 증가하는 값을 입력해 줌
+  - AUTO_INCREMENT는 PRIMARY KEY 또는 UNIQUE로 지정해 줘야 하며 숫자형만 사용 가능
+  - AUTO_INCREMENT로 지정된 열은 INSERT 문에서 NULL 값을 지정하면 자동으로 값이 입력 됨
+  - SELECT LAST_INSERT_ID(); 쿼리를 사용하면 마지막에 입력된 값을 확인 가능
+  - AUTO_INCREMENT 입력값을 지정해서 시작할수 있음
+    - ALTER TABLE 테이블명 AUTO_INCREMENT=시작할숫자; 시작값을 바꿔줌
+    - SET @@auto_increment_increment=증가값; 증가 값을 바꿔즘
+
+```sql
+USE  sqldb;
+CREATE TABLE testTbl2 -- 테이블 생성
+  (id  int AUTO_INCREMENT PRIMARY KEY, -- ID 열을 AUTO_INCREMENT, PRIMARY KEY 지정
+   userName char(3), 
+   age int );
+INSERT INTO testTbl2 VALUES (NULL, '지민', 25); -- ID 열에 입력값은 NULL, 1, 지민
+INSERT INTO testTbl2 VALUES (NULL, '유나', 22); -- 2, 유나 
+INSERT INTO testTbl2 VALUES (NULL, '유경', 21); -- 3, 유경
+
+ALTER TABLE testTbl2 AUTO_INCREMENT=100; -- AUTO_INCREMENT 시작 숫자를 바꿈 100으로
+INSERT INTO testTbl2 VALUES (NULL, '찬미', 23); -- 찬미는 100번으로 등록됨
+SET @auto_increment_increment=3; -- AUTO_INCREMENT 가 3씩 증가됨
+
+INSERT INTO testTbl3 VALUES (NULL, '나연', 20); -- 103, 나연
+INSERT INTO testTbl3 VALUES (NULL, '정연', 18); -- 106, 정연
+INSERT INTO testTbl3 VALUES (NULL, '모모', 19); -- 109, 모모
+
+```
 
 
 
+### 데이터의 수정 : UPDATE
+
+```sql
+-- 기본 구문
+UPDATE 테이블명
+	SET 열1=값1, 열2=값2 ..
+	WHERE 조건;
+```
+
+- UPDATE 사용시 WHERE 절을 생략하면 테이블의 전체행이 같은 값으로 바뀌게 됨
+
+```sql
+-- WHERE 절을 생략하는 경우
+UPDATE buytbl SET price = price * 1.5 ;
+-- 단가가 1.5배 올라서 전체 적용을 해야 할 경우,,
+-- 거의 사용할 일이 없음
+```
 
 
 
+### 데이터의 삭제 : DELETE FROM
+
+```sql
+-- 기본 구문
+DELETE FROM 테이블이름
+	WHERE 조건;
+```
+
+- WHERE 조건 없이 삭제할 경우 모든 테이블의 데이터가 삭제됨
 
 
 
+### 조건부 데이터 입력, 변경
+
+- 데이터 입력시 중복된 데이터 입력할 경우 오류로 인해 입력이 중단됨
+- 오류가 날경우 해당 구문만 제외하고 나머지 명령을 수행하게 하는 코드는 아래와 같음
+  - INSERT IGNORE INTO 테이블명 VALUES (값1, 값2, ...)
+- 중복 값 발생시 기존의 값을 입력한 값으로 변경하는 명령
+  - INSERT INTO 테이블명 VALUES(값1, 값2, ..) ON DUPLICATE KEY UPDATE 열1=값1, 열2=값2 ...;
+
+```sql
+-- 중복값 무시
+INSERT INTO memberTBL VALUES('BBK' , '비비코', '미국'); -- 중복값 입력으로 오류 발생
+INSERT INTO memberTBL VALUES('SJH' , '서장훈', '서울'); -- 중복값 때문에 입력이 안됨
+INSERT INTO memberTBL VALUES('HJY' , '현주엽', '경기'); -- 중복값 때문에 입력이 안됨
+SELECT * FROM memberTBL;
+
+INSERT IGNORE INTO memberTBL VALUES('BBK' , '비비코', '미국'); -- 중복값 오류 무시
+INSERT IGNORE INTO memberTBL VALUES('SJH' , '서장훈', '서울'); -- 정상 입력
+INSERT IGNORE INTO memberTBL VALUES('HJY' , '현주엽', '경기'); -- 정상 입력
+SELECT * FROM memberTBL;
+
+-- 중복값 발생시 기존값 업데이트 명령
+INSERT INTO memberTBL VALUES('BBK' , '비비코', '미국') -- 새로운 값이면 추가
+	ON DUPLICATE KEY UPDATE name='비비코', addr='미국'; -- 키가 중복된다면 내용 업데이트(변경)
+
+```
 
 
 
+### WITH절과 CTE
+
+- 비재귀적 CTE
+  - 재귀적이지 않은 CTE, 단순한 형태로 복잡한 쿼리를 단순화 시키는데 적합함
+
+```sql
+-- 기본 구문
+WITH CTE_테이블명(열이름)
+AS
+(
+	<쿼리문>
+)
+SELECT 열이름 FROM CTE_테이블명;
+
+-- 예시
+WITH abc(userid, total) -- ABC라는 CTE테이블 생성
+AS
+(SELECT userid, SUM(price*amount)  -- 테이블로 취급할 쿼리문
+  FROM buyTBL GROUP BY userid )
+SELECT * FROM abc ORDER BY total DESC ; -- 테이블처럼 호출 
+```
+
+
+
+## 07. SQL 고급
+
+
+
+23번 시작
 
 
 
