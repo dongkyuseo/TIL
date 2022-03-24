@@ -345,25 +345,235 @@ SELECT * FROM abc ORDER BY total DESC ; -- 테이블처럼 호출
 
 ## 07. SQL 고급
 
+### 숫자 데이터 형식
+
+![20](D:\workspace\00.TIL\SQL\IMAGE\20.png)
+
+- 정수를 지정할때 UNSIGNED 예약어를 사용하면 숫자의 범위가 정수만 사용하게 됨
+
+### 문자 데이터 형식
+
+![21](D:\workspace\00.TIL\SQL\IMAGE\21.png)
+
+### 날짜와 시간 데이터 형식
+
+![22](D:\workspace\00.TIL\SQL\IMAGE\22.png)
+
+### 기타 데이터 형식
+
+![23](D:\workspace\00.TIL\SQL\IMAGE\23.png)
+
+```sql
+-- PREPARE 를 활용한 변수 사용하기 예시
+SET @myVar1 = 3 ; -- 변수 저장
+PREPARE myQuery -- 임시 쿼리 생성
+    FROM 'SELECT Name, height FROM usertbl ORDER BY height LIMIT ?'; -- ? 자리에 변수를 사용
+EXECUTE myQuery USING @myVar1 ; -- EXCUTE로 저장한 임시쿼리를 실행, ?자리는 저장해 놓은 변수를 불러옴
+
+```
+
+### 데이터 형식 변환 함수
+
+- CAST(), CONVERT() 함수를 사용하는 데이터 형식 변환이 일반적임
+
+```sql
+-- 기본식
+CAST ( EXPRESSION AS 데이터형식 [ (길이) ])
+CONVERT ( EXPRESSION, 데이터형식 [ (길이) ])
+```
+
+- 데이터 형식중 가능한 것
+  - BINARY
+  - CHAR
+  - DATE
+  - DATETIME
+  - DECIMAL
+  - JSON
+  - SIGNED INTEGER
+  - TIME
+  - UNSIGNED INTEGER
+
+```sql
+SELECT AVG(amount) AS '평균 구매 개수' FROM buytbl ; -- 결과가 소숫점으로 나옴
+
+-- CAST/CONVERT, AS SIGNED INTEGER 사용시 반올림한 값이 출력됨
+SELECT CAST(AVG(amount) AS SIGNED INTEGER) AS '평균 구매 개수'  FROM buytbl ; 
+-- 또는
+SELECT CONVERT(AVG(amount) , SIGNED INTEGER) AS '평균 구매 개수'  FROM buytbl ;
+
+-- 날짜 형식사이에 특수문자를 넣고 CAST/CONVER 사용하면 자동으로 날짜형식으로 바꿔서 출력해줌
+SELECT CAST('2020$12$12' AS DATE);
+```
+
+### 내장 함수
+
+```sql
+-- 기본식
+IF(수식, 참, 거짓)
+-- 아래는 '거짓이다' 가 출력 됨
+SELECT IF (100>200, '참이다', '거짓이다');
+-- IFNULL은 값이 비어있을 경우 대신 출력할 값을 넣어 출력 가능
+SELECT IFNULL(NULL, '널이군요'), IFNULL(100, '널이군요');
+-- NULLIF 는 값1, 값2가 같으면 NULL을 출력함
+SELECT NULLIF(100,100), IFNULL(200,100);
+```
+
+### 연산자
+
+```sql
+-- 기본식
+CASE ~ WHEN ~ ELSE ~ END
+-- 예시
+SELECT 	CASE 10 -- CASE 비교대상값
+		-- 값이 WHEN 비교값 과 같으면 "값출력"
+		WHEN 1  THEN  '일' 
+		WHEN 5  THEN  '오'
+		WHEN 10 THEN  '십' -- 비교 값과 같음
+		ELSE '모름'
+	END AS 'CASE연습'; -- 열 이름 지정
+```
+
+### 문자열 함수
+
+```sql
+ASCII(아스키코드) -- 문자의 아스키 코드값을 돌려줌
+CHAR(숫자) -- 아스키 코드값에 해당하는 문자를 돌려줌
+CHAR_LENGTH(문자열) -- 글자의 개수 반환 / 가장 일반적으로 많이 쓰임
+BIT_LENGTH(문자열) -- 글자의 BIT크기
+LENGTH(문자열) -- 문자열의 크기 반환
+CONCAT(문자열1, 문자열2,..) -- 문자열을 이어줌
+CONCAT_WS(구분자, 문자열1,..) -- 구분자를 넣어서 문자열을 이어줌
+# ELT (위치, 문자열1,...)
+ELT(2, '하나', '둘', '셋') -- '둘' 을 반환함
+# FIELD(위치, 문자열1,...)
+FIELD('둘', '하나', '둘', '셋') -- 2를 반환함
+# FIND_IN_SET(위치, 문자열)
+FIND_IN_SET('둘', '하나,둘,셋') -- 2를 반환함
+# INSERT(문자열, 위치)
+INSTR('하나둘셋', '둘') -- 3을 반환함
+# LOCATE(위치, 문자열)
+LOCATE('둘', '하나둘셋') -- 3을 반환함
+# FORMAT은 소숫점 자리수 제한 및 천단위를,로 표기해줌
+# FORAMT(소숫점숫자, 소숫점제한할자리수)
+FORMAT(123456.123456, 4); -- 123,456.1235를 반환
+BIN(31) -- 2진수 반환
+HEX(31) -- 16진수 반환
+OCT(31) -- 8진수 반환
+# INSERT(기준문자열, 위치, 길이, 삽입할 문자열)
+INSERT('abcdefghi', 3, 4, '@@@@') -- ab@@@@ghi 반환
+# LEFT/RIGHT(문자열, 길이)
+LEFT('abcdefghi', 3) -- ABC 반환
+RIGHT('abcdefghi', 3) -- GHI 반환
+LOWER('abcdEFGH') -- 대문자로 변경
+UPPER('abcdEFGH') -- 소문자로 변경
+## L/RPAD(문자열, 길이, 채울문자열)
+LPAD('이것이', 5, '##') -- ##이것이 반환
+RPAD('이것이', 5, '##') -- 이것이## 반환
+## L/R TRIM(문자열) : 빈칸 삭제
+LTRIM('   이것이') -- 이것이 반환
+RTRIM('이것이   ') -- 이것이 반환
+TRIM('   이것이   ') -- 이것이 반환
+# BOTH 삭제할단어 FROM 대상문자
+TRIM(BOTH 'ㅋ' FROM 'ㅋㅋㅋ재밌어요.ㅋㅋㅋ') -- 재밌어요.
+# REPEAT(문자열, 반복횟수)
+REPEAT('이것이', 3) -- 이것이이것이이것이 반환
+# REPLACE(문자열, 변경할대상, 변경할단어)
+REPLACE ('이것이 MySQL이다', '이것이' , 'This is') -- This is MySQL이다 반환
+REVERSE ('MySQL') -- LQSyM 반환 / 문자열을 거꾸로 만듬
+CONCAT('이것이', SPACE(10), 'MySQL이다') -- 이것이          MySQL이다 반환 / 문자열 연결
+# substring(문자열, 시작위치, 길이)
+SUBSTRING('대한민국만세', 3, 2) -- 민국 반환
+# SUBSTRING_INDEX(문자열, 구분자, 횟수) 문자열에서 구분자가 왼쪽부터 나오면 그이후의 오른쪽은 버림
+# 횟수가 음수이면 오른쪽부터 세고 왼쪽을 버림
+SUBSTRING_INDEX('cafe.naver.com', '.', 2) -- cafe.naver 반환
+SUBSTRING_INDEX('cafe.naver.com', '.', -2) -- naver.com 반환
+```
+
+### 수학함수
+
+```sql
+# 숫자의 절대 값 반환
+ABS(-100) -- 100 반환
+CEILING(47) -- 올림값 반환
+FLOOR(4.7) -- 내림값 반환
+ROUND(4.7) -- 반올림값 반환
+# MODE(값1, 값2) 값1을 값2로 나눈 나머지 출력
+MOD(157, 10) --  157 % 10 = 7 반환
+157 MOD 10 -- 7 반환
+POW(2,3) -- 8 거듭제곱 값 반환
+SQRT(9) -- 3 루트9 값 반환
+# 랜덤값 반환
+RAND() -- 0이상 1미만의 실수
+FLOOR(1 + (RAND() * (N-M)) ) -- M<= 랜덤 < N 특정 범위의 랜덤값 구하기
+# SIGN(숫자) / 양수,0,음수 를 구분하여 1, 0 ,-1을 반환
+SIGN(100), SIGN(0), SIGN(-100.123) -- 1, 0, -1 반환
+# TRUNCATE(소수, 버릴소숫점위치) / 소숫점을 정수위치까지 구하고 나머지는 버림
+TRUNCATE(12345.12345, 2) -- 12345.12 반환
+TRUNCATE(12345.12345, -2) -- 12300 반환
+```
+
+### 날짜 및 시간 함수
+
+```sql
+
+# ADD/SUBDATE(날짜, INTERVAL 차이) 더하기/빼기 날짜를 기준으로 이전 이후 일을 계산해줌
+ADDDATE('2025-01-01', INTERVAL 31 DAY) -- 2025-02-01 반환
+ADDDATE('2025-01-01', INTERVAL 1 MONTH) -- 2025-02-01 반환
+SUBDATE('2025-01-01', INTERVAL 31 DAY) -- 2024-12-01 반환
+SUBDATE('2025-01-01', INTERVAL 1 MONTH) -- 2024-12-01 반환
+# ADD/SUBTIME(날짜/시간, 시간) 날짜/시간을 기준으로 이전시간 이후 시간을 계산해줌
+ADDTIME('2025-01-01 23:59:59', '1:1:1') -- 2025-01-02 01:01:00 반환
+ADDTIME('15:00:00', '2:10:10') -- 17:10:10 반환
+SUBTIME('2025-01-01 23:59:59', '1:1:1') -- 2025-01-01 22:58:58 반환
+SUBTIME('15:00:00', '2:10:10') -- 12:49:50 반환
+
+CURDATE() -- 현재 연-월-일
+CURTIME() -- 현재 시:분:초
+NOW()/SYSDATE() -- 현재 연-월-일 시:분:초
+
+YEAR(날짜) -- 날짜에서 연만 반환
+MONTH(날짜) -- 날짜에서 월만 반환
+DAY(날짜) -- 날짜에서 일만 반환
+DAYOFMONTH(날짜) -- 날짜에서 일만 반환
+HOUR() -- 날짜에서 시간 반환
+MINUTE() -- 날짜에서 분 반환
+SECOND() -- 날짜에서 초 반환
+MICROSECOND() -- 날짜에서 밀리초 반환
+
+DATE(NOW()) -- 현재 날짜만 연-월-일 반환
+TIME(NOW()) -- 현재 시간만 시:분:초 반환
+
+DATEDIFF(날짜1, 날짜2) -- 날짜1 - 날짜2
+TIMEDIFF(시간1, 시간2) -- 시간1 - 시간2
+
+DAYOFWEEK(CURDATE()) -- 날짜에서 일을 숫자로 반환(일은 일:1, 월:2 ~ 토:7)
+MONTHNAME(CURDATE()) -- 현재 몇월인지 영문자로
+DAYOFYEAR(CURDATE()) -- 일년중 몇일이 지났는지 알 수 있음
+
+LAST_DAY('2025-02-01') -- 날짜의 달이 몇일까지 있는지 확인
+MAKEDATE(2025, 32) -- 연도에서 정수만큼 지난 날짜를 구함
+MAKETIME(12, 11, 10) -- 시, 분, 초 형식의 시간을 만들어줌
+PERIOD_ADD(202501, 11) -- 연월YYYYMM, 개월수 / 연월에서 개월만큼의 개월이 지난 연월을 구함
+PERIOD_DIFF(202501, 202312) -- 연월1 - 연월2 의 개월수
+QUARTER('2025-07-07') -- 날짜가 4분기중 몇분기인지 반환
+TIME_TO_SEC('12:11:10') -- 시간을 초단위로 반환
+```
+
+### 시스템 정보 함수
+
+```SQL
+CURRENT_USER() -- 현재 사용자
+DATABASE() -- 현재 선택된 데이터베이스 반환
+FOUND_ROWS() -- 바로 앞의 SELECT 문에서 조회된 행의 개수를 반환
+ROW_COUNT() -- 바로 앞의 INSERT, UPDATE, DELETE문에서 입력, 수정, 삭제된 행의 개수 반환
+# CREATE, DROP문은 0을 반환하고 SELECT 문은 -1을 반환
+VERSION() -- 현재 MySQL 버전 반환
+SLEEP(초) -- 지정한 초동안 쿼리의 실행을 멈춤
+```
 
 
-23번 시작
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+25 부터
 
 
 
