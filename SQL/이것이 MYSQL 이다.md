@@ -1,4 +1,4 @@
-# 이것이 MYSQL 이다.
+# [이것이 MYSQL 이다.](https://www.youtube.com/playlist?list=PLVsNizTWUw7Hox7NMhenT-bulldCp9HP9)
 
 - 데이터베이스 = 데이터들의 집합
 - 데이터베이스는 여러명의 사용자와 동시에 사용함
@@ -571,9 +571,357 @@ VERSION() -- 현재 MySQL 버전 반환
 SLEEP(초) -- 지정한 초동안 쿼리의 실행을 멈춤
 ```
 
+### 피벗의 구현
+
+- 한 열에 포함된 여러 값을 출력하고, 이를 여러 열로 변환하여 테이블 반환 식을 회전하고 필요하면 집계까지 수행하는 것
+
+```sql
+USE sqldb;
+CREATE TABLE pivotTest -- 피봇으로 사용할 테이블 생성
+   (  uName CHAR(3),
+      season CHAR(2),
+      amount INT );
+
+INSERT  INTO  pivotTest VALUES -- 피봇 테이블 값 입력
+	('김범수' , '겨울',  10) , ('윤종신' , '여름',  15) , ('김범수' , '가을',  25) , ('김범수' , '봄',    3) ,
+	('김범수' , '봄',    37) , ('윤종신' , '겨울',  40) , ('김범수' , '여름',  14) ,('김범수' , '겨울',  22) ,
+	('윤종신' , '여름',  64) ;
+SELECT * FROM pivotTest;
+
+SELECT uName, -- 피봇 실행, 각 계절별로 합계, 묶을 그룹은 이름으로 지정
+  SUM(IF(season='봄', amount, 0)) AS '봄', 
+  SUM(IF(season='여름', amount, 0)) AS '여름',
+  SUM(IF(season='가을', amount, 0)) AS '가을',
+  SUM(IF(season='겨울', amount, 0)) AS '겨울',
+  SUM(amount) AS '합계' FROM pivotTest GROUP BY uName ;
+```
+
+![24](D:\workspace\00.TIL\SQL\IMAGE\24.png)
+
+![25](D:\workspace\00.TIL\SQL\IMAGE\25.png)
+
+### JSON 데이터
+
+- 현대의 웹과 모바일 응용 프로그램 등과 데이터를 교환하기 위한 개방형 표준 포맷
+- 속성(KEY)과 값(VALUES)으로 쌍을 이루며 구성됨
+- 특정 프로그래밍 언어에 종속되어 있지 않은 독립적인 데이터 포맷
+- 포맷이 단순하고 공개되어 있어 거의 대부분의 프로그래밍 언어에서 쉽게 읽거나 쓸 수 있음
+
+![26](D:\workspace\00.TIL\SQL\IMAGE\26.png)
+
+![27](D:\workspace\00.TIL\SQL\IMAGE\27.png)
+
+```sql
+USE sqldb;
+SELECT JSON_OBJECT('name', name, 'height', height) AS 'JSON 값'
+	FROM usertbl 
+    WHERE height >= 180; -- JSON 테이블 생성을 위한 값 조회
+
+SET @json='{ "usertbl" :
+  [
+	{"name":"임재범","height":182},
+	{"name":"이승기","height":182},
+	{"name":"성시경","height":186}
+  ]
+}' ; -- JSON 형태로 만드는 구문
+
+SELECT JSON_VALID(@json) AS JSON_VALID; -- JSON 형식이 맞으면 1, 틀리면 0을 반환
+SELECT JSON_SEARCH(@json, 'one', '성시경') AS JSON_SEARCH; -- ONE이면 하나 ALL이면 전부, 검색어의 위치를 반환
+SELECT JSON_EXTRACT(@json, '$.usertbl[2].name') AS JSON_EXTRACT; -- 위치로 해당 데이터 반환
+SELECT JSON_INSERT(@json, '$.usertbl[0].mDate', '2009-09-09') AS JSON_INSERT; -- 열삽입 구문, 날짜 열 추가
+SELECT JSON_REPLACE(@json, '$.usertbl[0].name', '홍길동') AS JSON_REPLACE; -- 0번째 값을 변경
+SELECT JSON_REMOVE(@json, '$.usertbl[0]') AS JSON_REMOVE; -- 행 삭제 구문
+```
+
+### JOIN
+
+- 두 개 이상의 테이블을 서로 묶어서 하나의 결과 집합으로 만들어 내는 것
+
+#### INNER JOIN
+
+- 일반적인 JOIN은 INNER JOIN을 의미
+
+```sql
+-- 기본 형식
+SELECT 열 목록
+FROM 테이블1
+	[INNER] JOIN 테이블2 -- INNER JOIN = JOIN 같은 명령
+	ON 조인 조건
+[WHERE 검색 조건]
+
+-- 기본적인 이너조인 예시
+SELECT U.userID, U.name, B.prodName, U.addr, U.mobile1 + U.mobile2  AS '연락처' -- 알리안스로 구분하여 열 이름 지정
+   FROM usertbl U -- 기준 테이블
+     INNER JOIN buytbl B -- 조인할 테이블
+        ON U.userID = B.userID  -- JOIN 시 사용할 키 지정
+   ORDER BY U.userID; -- 정렬
+   
+-- 3개의 테 이블 이너조인
+```
+
+#### OUTER JOIN
+
+- 조건에 만족하지 않는 행까지도 포함시키는 것
+
+``` sql
+-- 기본 형식
+SELECT 열 목록
+FROM 테이블1
+	<LEFT | RIGHT | FULL > OUTER JOIN 테이블2
+	ON 조인 조건
+[WHERE 검색 조건]
+```
+
+#### CROSS JOIN
+
+- 한쪽테이블과 다른쪽 테이블 모두를 조인하는것
+- 대량의 샘플데이터를 생성할때 사용
+
+``` sql
+USE employees;
+SELECT  COUNT(*) AS '데이터개수'
+   FROM employees 
+     CROSS JOIN titles;
+```
+
+#### UNION / UNION ALL / NOT IN  / IN
+
+- UNION만 사용시 중복열 제거되고 데이터가 정렬되어 나옴
+- UNION ALL 사용시 중복된 열까지 모두 출력됨
+- NOT IN 첫 번째 쿼리의 결과 중 두 번째 쿼리에 해당하는 것을 제외하는 구문
+- IN 첫 번째 쿼리의 결과 중 두 번째 쿼리에 해당되는 것만 조회
+
+```sql
+-- 기본 형식
+SELECT 문장1
+	UNION [ALL]
+SELECT 문장2
+```
+
+### SQL 프로그래밍
+
+- 스토어드 프로시저
+
+```SQL
+-- 스토어드 프로시저 기본 형식
+DELIMITER $$
+CREATE PROCEDURE 스토어드프로시저 이름()
+BEGIN
+	
+	이 부분에 SQL 프로그래밍 코딩
+	
+END $$
+DELIMITER ;
+CALL 스토어드프로시저 이름();
+```
+
+- CASE문
+
+```sql
+-- IF문으로 만들 경우
+DELIMITER $$
+CREATE PROCEDURE ifProc3()
+BEGIN
+	DECLARE point INT ;
+	DECLARE credit CHAR(1);
+	SET point = 77;
+	
+	IF point >= 90 THEN
+		SET credit = 'A';
+	ELSEIF point >= 80 THEN
+		SET credit = 'B';
+	ELSEIF point >= 70 THEN
+		SET credit = 'C';
+	ELSEIF point >= 60 THEN
+		SET credit = 'D';
+	ELSE
+		SET credit = 'F';
+	END IF;
+	SELECT CONCAT('취득점수==>', point), CONCAT('학점==>', credit);
+END $$
+DELIMITER ;
+CALL ifProc3();
+
+-- CASE 문으로 만들경우
+DELIMITER $$
+CREATE PROCEDURE caseProc()
+BEGIN
+	DECLARE point INT ;
+	DECLARE credit CHAR(1);
+	SET point = 77;
+	
+	CASE
+        WHEN point >= 90 THEN
+            SET credit = 'A';
+        WHEN point >= 80 THEN
+            SET credit = 'B';
+        WHEN point >= 70 THEN
+            SET credit = 'C';
+        WHEN point >= 60 THEN
+            SET credit = 'D';
+        ELSE
+            SET credit = 'F';
+	END CASE;
+	SELECT CONCAT('취득점수==>', point), CONCAT('학점==>', credit);
+END $$
+DELIMITER ;
+CALL ifProc3();
+```
 
 
-25 부터
+
+## 08. 테이블과 뷰 
+
+### 테이블
+
+- 기본 테이블 생성 및 값 입력
+
+```sql
+-- 기본 테이블 생성 및 키 지정
+CREATE TABLE usertbl -- 회원 테이블
+( userID  CHAR(8) [NOT NULL] PRIMARY KEY, -- 사용자 아이디
+  name    VARCHAR(10) NOT NULL, -- 이름
+  birthYear   INT NOT NULL,  -- 출생년도
+  addr	  CHAR(2) NOT NULL, -- 지역(경기,서울,경남 등으로 글자만 입력)
+  mobile1  CHAR(3) NULL, -- 휴대폰의국번(011, 016, 017, 018, 019, 010 등)
+  mobile2  CHAR(8) NULL, -- 휴대폰의 나머지 전화번호(하이픈 제외)
+  height    SMALLINT NULL,  -- 키
+  mDate    DATE NULL  -- 회원 가입일
+);
+CREATE TABLE buytbl -- 구매 테이블
+(  num INT AUTO_INCREMENT NOT NULL PRIMARY KEY, -- 순번(PK)
+   userid  CHAR(8) NOT NULL,-- 아이디(FK)
+   prodName CHAR(6) NOT NULL, -- 물품명
+   groupName CHAR(4) NOT NULL, -- 분류
+   price     INT NOT NULL, -- 단가
+   amount SMALLINT NOT NULL -- 수량
+   , FOREIGN KEY(userid) REFERENCES usertbl(userID)
+);
+
+-- 값 입력
+INSERT INTO usertbl VALUES('LSG', '이승기', 1987, '서울', '011', '1111111', 182, '2008-8-8');
+```
+
+- 제약 조건
+
+  - 데이터의 무결성을 지키기위한 제한된 조건
+  - 데이터 무결성 : 데이터 결함을 없앰
+  - MySQL의 데이터 무결성을 위한 6가지 제약 조건
+    - PRIMARY KEY 제약 조건
+    - FOREIGN KEY 제약 조건
+    - UNIQUE 제약 조건
+    - CHECK 제약 조건
+    - DFAULT 정의
+    - NULL 값 허용
+
+  ```sql
+  DESCRIBE usertbl; -- 테이블 정보를 보기 위한 호출
+  -- PRIMARY KEY 이름 지정하는 방법 : CONSTRAINT PRIMARY KEY 이름(열이름)
+  # 방법1
+  CREATE TABLE usertbl 
+  ( userID  CHAR(8) NOT NULL, 
+    name    VARCHAR(10) NOT NULL, 
+    birthYear   INT NOT NULL,  
+    CONSTRAINT PRIMARY KEY PK_usertbl_userID (userID) -- 지정 방법 예시
+  );
+  # 방법2
+  CREATE TABLE usertbl 
+  (   userID  CHAR(8) NOT NULL, 
+      name    VARCHAR(10) NOT NULL, 
+      birthYear   INT NOT NULL
+  );
+  ALTER TABLE usertbl -- 테이블 수정
+       ADD CONSTRAINT PK_usertbl_userID -- ADD CONSTRAINT : 제약조건 추가, 추가할 제약조건 이름 지정
+       PRIMARY KEY (userID); -- 추가할 제약 조건은 기본 키 제약 조건, 제약 조건을 설정할 열 이름 지정
+  -- 2개의 열을 기본키로 지정할 경우
+  CREATE TABLE prodTbl
+  ( prodCode CHAR(3) NOT NULL,
+    prodID   CHAR(4)  NOT NULL,
+    prodDate DATETIME  NOT NULL,
+    prodCur  CHAR(10) NULL,
+    CONSTRAINT PK_prodTbl_proCode_prodID 
+  	PRIMARY KEY (prodCode, prodID) -- 괄호로 묶어 콤마로 구분해 지정
+  );
+  
+  SHOW INDEX FROM prodTbl; -- 2개로 지정한 기본키를 호출해 확인하는 쿼리
+  
+  -- 외래키 설정 예시
+  CREATE TABLE usertbl -- 기준 테이블, 부모 테이블
+  ( userID  CHAR(8) NOT NULL PRIMARY KEY, 
+    name    VARCHAR(10) NOT NULL, 
+    birthYear   INT NOT NULL 
+  );
+  CREATE TABLE buytbl -- 외래키 테이블, 자식 테이블
+  (  num INT AUTO_INCREMENT NOT NULL PRIMARY KEY , 
+     userID  CHAR(8) NOT NULL, 
+     prodName CHAR(6) NOT NULL,
+     CONSTRAINT FK_usertbl_buytbl FOREIGN KEY(userID) REFERENCES usertbl(userID) -- 해당내용을 작성
+   -- CONSTRAINT 외래키이름 FOREIGN KEY(외래키열) REFERENCES 기준테이블(외래키와 연동할 열)
+  );
+  -- 외래키 설정시 기준테이블의 연동한 열 값 변경시 같이 변경하도록 설정 
+  -- ON UPDATE CASCADE/ON DELETE CASCADE
+  ALTER TABLE buytbl
+  	ADD CONSTRAINT FK_usertbl_buytbl
+  	FOREIGN KEY (userID)
+  	REFERENCES usertbl (userID)
+  	ON UPDATE CASCADE;
+  
+  -- 테이블 삭제, 외래키 테이블 먼저 삭제 후 기준 테이블을 삭제해야 함
+  DROP TABLE 테이블 이름;
+  
+  -- 테이블 수정
+  ALTER TABLE 테이블명
+  	ADD 열이름 데이터타입 -- 열 추가
+  		DEFAULT '디폴트값' -- 디폴트 값
+  		NULL -- 널값 허용 여부
+  		FIRST / AFTER 열이름 -- 열의 순서 지정
+  		;
+  		
+  ALTER TABLE 테이블명
+  	DROP COLUMN 열이름; -- 열 삭제, 열의 데이터 삭제 및 제약조건이 있을 경우 선조건삭제 후 삭제가능
+  	
+  ALTER TABLE 테이블명
+  	CHANGE COLUMN 기존열이름 바꿀열이름 데이터형식 널값여부; -- 열 이름 및 데이터 형식 변경
+  	
+  ALTER TABLE 테이블명
+  	DROP PRIMARY KEY; -- 열의 제약 조건 삭제 기본키
+  	DROP FOREIGN KEY 외래키이름; -- 열의 제약 조건 삭제 외래키
+  ```
+
+### 뷰
+
+- 일반 사용자 입장에서는 테이블과 동일하게 사용하는 개체
+- 한번 생성해 놓으면 테이블이라고 생각하고 사용해도 될 정도로 동일한 개체
+
+```sql
+-- 뷰 생성 기본 쿼리
+CREATE VIEW 뷰이름
+AS
+	SELECT 열이름 FROM 테이블명;
+
+-- 뷰 내용 확인
+DESCRIBE 뷰이름;
+
+-- 뷰의 소스코드 확인
+SHOW CREATE VIEW 뷰이름;
+
+
+```
+
+- 뷰의 장점
+  - 보안에 도움이 됨
+  - 복잡한 쿼리를 단순화 시켜줄 수 있음
+
+### 테이블 스페이스
+
+- 대용량의 데이터 사용시 신경써야 함
+- 성능 향상을 위해 테이블 스페이스 추가 가능(디스크마다 다른 테이블이 존재해 속도 향상)
+
+
+
+36부터 다시 시작
+
+
 
 
 
