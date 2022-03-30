@@ -970,5 +970,103 @@ DROP INDEX 인덱스 이름
 
 
 
-41 부터 시작
+## 10. 스토어드  프로그램
 
+### 스토어드 프로시저 (stored procedure, 저장프로시저)
+
+- 쿼리문의 집합
+
+```sql
+-- 기본 형태
+DELIMITER $$
+CREATE PROCEDURE 스토어드 프로시저이름( IN / OUT 파라미터 )
+BEGIN
+
+	SQL 프로그래밍 코딩
+
+END $$
+DELIMITER ;
+
+CALL 스토어드 프로시저 이름();
+
+-- 스토어드 프로시저의 수정과 삭제
+# 수정
+ALTER PROCEDURE 스토어드프로시저이름();
+# 삭제
+DROP PROCEDURE 스토어드프로시저이름();
+```
+
+- 매개 변수의 사용
+
+```sql
+-- 입력 매개변수 형식
+IN 입력_매개변수_이름 데이터_형식
+
+-- 출력 매개변수 형식
+OUT 추력_매개변수_이름 데이터_형식
+
+-- 변수를 사용할 수도 있음
+CALL 프로시저_이름(@변수명);
+SELECT @변수명;
+
+-- 예시
+DROP PROCEDURE IF EXISTS userProc3;
+DELIMITER $$
+CREATE PROCEDURE userProc3(
+    IN txtValue CHAR(10),	-- 입력 매개변수
+    OUT outValue INT	    -- 출력 매개변수
+)
+BEGIN
+  INSERT INTO testTBL VALUES(NULL,txtValue); -- 입력 매개변수를 이용한 쿼리
+  SELECT MAX(id) INTO outValue FROM testTBL; -- 출력 매개변수에 넣을 값 
+END $$
+DELIMITER ;
+
+-- 스토어드프로시저 생성시 테이블이 없어도 생성 가능, 이후 작동하려면 테이블이 있어야 함
+CREATE TABLE IF NOT EXISTS testTBL(
+    id INT AUTO_INCREMENT PRIMARY KEY, 
+    txt CHAR(10)
+);
+
+CALL userProc3 ('테스트값', @myValue); -- 스토어드프로시저 사용
+SELECT CONCAT('현재 입력된 ID 값 ==>', @myValue); -- 출력매개변수 값 확인
+
+-- 프로시저의 코드 형태 확인하는 쿼리
+SHOW CREATE PROCEDURE sqldb.userProc3;
+```
+
+- 저장 프로시저의 특징
+  - MySQL 의 성능이 향상됨
+  - 유지관리가 간편함
+  - 모듈식 프로그래밍 가능
+  - 보안 강화
+
+### 스토어드 함수
+
+- 내장함수에서 모든 함수를 제공하지 않아 직접 함수를 만들어 사용 하는 방식
+- 스토어드 프로시저와 상당히 유사하지만 형태와 사용 용도에는 약간의 차이가 있음
+
+```sql
+-- 스토어드 함수 기본 형식
+DELIMITER $$
+CREATE FUNCTION 스토어드 함수 이름( 파라미터 )
+	RETURNS 반환형식
+BEGIN
+	이부분에 프로그래밍 코딩
+	
+	RETURN 반환값;
+	
+END $$
+DELIMITER ;
+
+SELECT 스토어드_함수이름();
+```
+
+- 스토어드 함수의 정의
+  - 스토어드 프로시저의 파라미터와 달리 IN, OUT 등을 사용할 수 없고 스토어드 함수의 파라미터는 모두 입력 파라미터로 사용됨
+  - 스토어드 함수는 RETURNS문으로 반환할 값의 데이터 형식을 지정하고, 본문 안에서는 RETURN문으로 하나의 값을 반환해야 함
+  - 스토어드 프로시저는 별도의 반환하는 구문이 없으며, 꼭 필요하다면 여러 개의 OUT 파라미터를 사용해서 값을 반환할 수 있음
+  - 스토어드 프로시저는 CALL로 호출
+  - 스토어드 함수는 SELECT 문장 안에서 호출됨
+  - 스토어드 프로시저 안에는 SELECT문을 사용할 수 있지만, 스토어드 함수 안에서는 집합 결과를 반환하는 SELECT를 사용할 수 없음
+- 
