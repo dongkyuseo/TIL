@@ -1069,4 +1069,385 @@ SELECT 스토어드_함수이름();
   - 스토어드 프로시저는 CALL로 호출
   - 스토어드 함수는 SELECT 문장 안에서 호출됨
   - 스토어드 프로시저 안에는 SELECT문을 사용할 수 있지만, 스토어드 함수 안에서는 집합 결과를 반환하는 SELECT를 사용할 수 없음
-- 
+
+```sql
+-- 예시
+SET GLOBAL log_bin_trust_function_creators = 1; -- 스토어드 함수를 만들기 위한 선언 쿼리
+
+-- 더하기 프로시저 함수 만들기
+USE sqlDB;
+DROP FUNCTION IF EXISTS userFunc;
+DELIMITER $$
+CREATE FUNCTION userFunc(value1 INT, value2 INT) -- 함수 생성(값1 데이터형식, 값2 데이터형식)
+    RETURNS INT -- 반환 데이터 형식
+BEGIN -- 함수 부분
+    RETURN value1 + value2; -- 값 1 + 값 2 수식 생성
+END $$ -- 함수 종료
+DELIMITER ;
+
+SELECT userFunc(100, 200); -- 함수 호출
+
+-- 나이 계산 함수 만들기
+USE sqlDB;
+DROP FUNCTION IF EXISTS getAgeFunc;
+DELIMITER $$
+CREATE FUNCTION getAgeFunc(bYear INT)
+    RETURNS INT
+BEGIN
+    DECLARE age INT;
+    SET age = YEAR(CURDATE()) - bYear;
+    RETURN age;
+END $$
+DELIMITER ;
+```
+
+
+
+### 커서
+
+- 스토어드 프로시저 내부에서 쓰임
+
+![29](D:\workspace\00.TIL\SQL\IMAGE\29.png)
+
+```sql
+-- 커서 활용 예시
+DROP PROCEDURE IF EXISTS cursorProc;
+DELIMITER $$
+CREATE PROCEDURE cursorProc()
+BEGIN
+    DECLARE userHeight INT; -- 고객의 키
+    DECLARE cnt INT DEFAULT 0; -- 고객의 인원 수(=읽은 행의 수)
+    DECLARE totalHeight INT DEFAULT 0; -- 키의 합계
+    
+    DECLARE endOfRow BOOLEAN DEFAULT FALSE; -- 행의 끝 여부(기본을 FALSE)
+
+    DECLARE userCuror CURSOR FOR-- 커서 선언
+        SELECT height FROM userTbl;
+
+    DECLARE CONTINUE HANDLER -- 행의 끝이면 endOfRow 변수에 TRUE를 대입 
+        FOR NOT FOUND SET endOfRow = TRUE;
+    
+    OPEN userCuror;  -- 커서 열기
+
+    cursor_loop: LOOP
+        FETCH  userCuror INTO userHeight; -- 고객 키 1개를 대입
+        
+        IF endOfRow THEN -- 더이상 읽을 행이 없으면 Loop를 종료
+            LEAVE cursor_loop;
+        END IF;
+
+        SET cnt = cnt + 1;
+        SET totalHeight = totalHeight + userHeight;        
+    END LOOP cursor_loop;
+    
+    -- 고객 키의 평균을 출력한다.
+    SELECT CONCAT('고객 키의 평균 ==> ', (totalHeight/cnt));
+    
+    CLOSE userCuror;  -- 커서 닫기
+END $$
+DELIMITER ;
+
+CALL cursorProc();
+```
+
+### 트리거
+
+- 테이블에 부착되어 테이블의 삽입/수정/삭제 시 작동하게 됨
+- 활용사례
+  - 테이블의 행 삭제시, 해당 내용을 지워지기 전에 다른 테이블에 기록 하는 것
+- 트리거의 개요 : 데이터의 무결성을 위한 제약 조건,DML의 이벤트 발생시 작동하는 데이터베이스 개념
+
+```sql
+-- 트리거 예시
+DROP TRIGGER IF EXISTS testTrg;
+DELIMITER // 
+CREATE TRIGGER testTrg  -- 트리거 이름
+    AFTER  DELETE -- 삭제후에 작동하도록 지정
+    ON testTbl -- 트리거를 부착할 테이블
+    FOR EACH ROW -- 각 행마다 적용시킴
+BEGIN
+	SET @msg = '가수 그룹이 삭제됨' ; -- 트리거 실행시 작동되는 코드들
+END // 
+DELIMITER ;
+```
+
+- 트리거의 종류
+  - AFTER 트리거 : INSERT, UPDATE, DELETE 등 작업시 작동하는 트리거 의미, 작업 후에 작동함
+  - BEFORE 트리거 : 테이블에 이벤트가 작동한 후 실행되지만 이벤트(INSERT, UPDATE, DELETE)가 발생하기 전에 작동하는 트리거
+  - 트리거는 ALTER TRIGGER 문으로 수정이 불가하여 DORP TRIGGER를 통해 삭제후 새로 생성해야 함
+
+```sql
+-- 예시
+-- AFTER 트리거
+-- 백업 테이블 생성
+USE sqlDB;
+DROP TABLE buyTbl; -- 구매테이블은 실습에 필요없으므로 삭제.
+CREATE TABLE backup_userTbl
+( userID  CHAR(8) NOT NULL PRIMARY KEY, 
+  name    VARCHAR(10) NOT NULL, 
+  birthYear   INT NOT NULL,  
+  addr	  CHAR(2) NOT NULL, 
+  mobile1	CHAR(3), 
+  mobile2   CHAR(8), 
+  height    SMALLINT,  
+  mDate    DATE,
+  modType  CHAR(2), -- 변경된 타입. '수정' 또는 '삭제'
+  modDate  DATE, -- 변경된 날짜
+  modUser  VARCHAR(256) -- 변경한 사용자
+);
+
+-- 백업 테이블에 업데이트 기록
+DROP TRIGGER IF EXISTS backUserTbl_UpdateTrg;
+DELIMITER // 
+CREATE TRIGGER backUserTbl_UpdateTrg  -- 트리거 이름
+    AFTER UPDATE -- 변경 후에 작동하도록 지정
+    ON userTBL -- 트리거를 부착할 테이블
+    FOR EACH ROW 
+BEGIN
+    INSERT INTO backup_userTbl VALUES( OLD.userID, OLD.name, OLD.birthYear, 
+        OLD.addr, OLD.mobile1, OLD.mobile2, OLD.height, OLD.mDate, 
+        '수정', CURDATE(), CURRENT_USER() ); -- OLD 는 방금 삭제된 행 내용을 의미
+END // 
+DELIMITER ;
+
+-- 백업 테이블에 삭제 기록
+DROP TRIGGER IF EXISTS backUserTbl_DeleteTrg;
+DELIMITER // 
+CREATE TRIGGER backUserTbl_DeleteTrg  -- 트리거 이름
+    AFTER DELETE -- 삭제 후에 작동하도록 지정
+    ON userTBL -- 트리거를 부착할 테이블
+    FOR EACH ROW 
+BEGIN
+    INSERT INTO backup_userTbl VALUES( OLD.userID, OLD.name, OLD.birthYear, 
+        OLD.addr, OLD.mobile1, OLD.mobile2, OLD.height, OLD.mDate, 
+        '삭제', CURDATE(), CURRENT_USER() );
+END // 
+DELIMITER ;
+
+-- 변경,삭제 실행 예시
+UPDATE userTbl SET addr = '몽고' WHERE userID = 'JKW'; -- 값 변경
+DELETE FROM userTbl WHERE height >= 177; -- 값 삭제
+
+SELECT * FROM backup_userTbl; -- 조회시 변경전 값 기록됨 확인
+
+TRUNCATE TABLE userTbl; -- DDL문으로 테이블 전체 값 삭제 
+
+SELECT * FROM backup_userTbl; -- 기록안됨, DDL문으로 삭제시 기록 안됨
+
+-- BEFORE 트리거
+-- 입력 전 트리거 실행
+DROP TRIGGER IF EXISTS userTbl_InsertTrg;
+DELIMITER // 
+CREATE TRIGGER userTbl_InsertTrg  -- 트리거 이름
+    AFTER INSERT -- 입력 후에 작동하도록 지정
+    ON userTBL -- 트리거를 부착할 테이블
+    FOR EACH ROW 
+BEGIN
+    SIGNAL SQLSTATE '45000' -- 발생시킬 오류
+        SET MESSAGE_TEXT = '데이터의 입력을 시도했습니다. 귀하의 정보가 서버에 기록되었습니다.'; -- 전달 메시지
+END // 
+DELIMITER ;
+
+INSERT INTO userTbl VALUES('ABC', '에비씨', 1977, '서울', '011', '1111111', 181, '2019-12-25'); -- 값 입력시 트리거 실행됨
+```
+
+### 트리거가 생성하는 임시 테이블
+
+- 트리거에서 INSERT, UPDATE, DELETE 작업이 수행되면 임시로 사용되는 시스템 테이블 2개가 있음
+  - NEW 테이블
+    - INSERT (새 값) 실행시 NEW테이블을 거쳐 입력 테이블에 새값이 입력 됨
+  - OLD 테이블
+    - DELETE (예전 값) 실행시 테이블에 값을 지우고 OLD 테이블에 잠깐 기록 됨
+  - UPDATE(새 값, 예전 값) 실행시 NEW와 OLD가 둘다 사용 됨
+
+![30](D:\workspace\00.TIL\SQL\IMAGE\30.png)
+
+``` sql
+-- BEFORE 트리거 예시
+USE sqlDB;
+DROP TRIGGER IF EXISTS userTbl_BeforeInsertTrg;
+DELIMITER // 
+CREATE TRIGGER userTbl_BeforeInsertTrg  -- 트리거 이름
+    BEFORE INSERT -- 입력 전에 작동하도록 지정
+    ON userTBL -- 트리거를 부착할 테이블
+    FOR EACH ROW 
+BEGIN -- 출생년도가 1900 미만이면 0으로 출생년도를 현재 이후로 할경우 지금의 년도로 입력되도록
+    IF NEW.birthYear < 1900 THEN
+        SET NEW.birthYear = 0;
+    ELSEIF NEW.birthYear > YEAR(CURDATE()) THEN
+        SET NEW.birthYear = YEAR(CURDATE());
+    END IF;
+END // 
+DELIMITER ;
+
+INSERT INTO userTbl VALUES
+  ('AAA', '에이', 1877, '서울', '011', '1112222', 181, '2022-12-25');
+INSERT INTO userTbl VALUES
+  ('BBB', '비이', 2977, '경기', '011', '1113333', 171, '2019-3-25');
+
+
+SHOW TRIGGERS FROM sqlDB;
+
+DROP TRIGGER userTbl_BeforeInsertTrg;
+```
+
+
+
+### 트리거 기타 내용
+
+- 다중 트리거
+  - 하나의 테이블에 동일한 트리거가 여러개 부착되어 있는 것
+- 중첩 트리거
+  - 트리거가 다른 트리거를 작동하는 것을 의미
+
+![31](D:\workspace\00.TIL\SQL\IMAGE\31.png)
+
+
+
+## 11. 전체 텍스트 검색과 파티션
+
+- 긴 문자로 구성된 구조화되지 않은 텍스트 데이터를 빠르게 검색하기 위한 부가적인 MySQL 기능
+
+```sql
+-- 전체 텍스트 인덱스 예시
+CREATE FULLTEXT INDEX 생성할_인덱스_이름 ON 테이블명(열이름);
+
+SHOW INDEX FROM 생성할_인덱스_이름;
+```
+
+- 전체 텍스트 인덱스
+  - 문자의 각각의 단어들로 인덱스를 만드는 것
+  - 전체 텍스트는 InnoDB와 MyISAM 테이블만 지원함
+  - 전체 텍스트 인덱스는 char, varchar, text의 열에만 생성 가능
+  - 인덱스 힌트의 사용이 일부 제한됨
+  - 여러 개 열에 FULLTEXT 인덱스를 지정할 수 있음
+- 중지 단어
+  - 전체 텍스트는 긴 문장에 대해 인덱스를 생성해 양이 커지므로, 무시할 단어를 전체 텍스트 인덱스로 생성하지 않는 것이 좋음
+
+```sql
+-- 중지단어 예시
+CREATE TABLE user_stopword (value VARCHAR(30)); -- 중지단어를 모아둘 테이블 생성
+
+INSERT INTO user_stopword VALUES ('그는'), ('그리고'), ('극에'); -- 중지단어 값 추가
+-- 중지단어 글로벌 설정
+SET GLOBAL innodb_ft_server_stopword_table = 'fulltextdb/user_stopword'; -- 모두 소문자로 입력
+
+SHOW GLOBAL VARIABLES LIKE 'innodb_ft_server_stopword_table'; -- 중지단어 추가 확인
+-- 이후 텍스트 인덱스 생성
+```
+
+
+
+- 자연어 검색
+
+```sql
+-- '영화'라는 단어 검색 예시
+SELECT * FROM newspaper
+	WHERE MATCH(article) AGAINST('영화');
+	-- '영화가', '영화는', '한국영화' 등과같은 단어는 검색 안됨
+
+-- '영화' 또는 '배우' 라는 단어중 하나가 포함된 기사를 찾으려면
+SELECT * FROM newspaper
+	WHERE MATCH(article) AGAINST('영화 배우'); -- 띄어쓰기를 해주면 두개의 조건에 대해 검색해 줌
+
+-- 불린모드 검색 : 단어나 문장이 정확히 일치하지 않아도 검색하는 것
+SELECT * FROM newspaper
+	WHERE MATCH(article) AGAINST('영화*' IN BOOLEAN MODE);
+	-- '영화를', '영화가', '영화는' 등 영화가 앞에들어간 모든 결과 검색
+
+-- '영화' 또는 '배우' 가 아닌 '영화 배우'라는 단어를 검색하려면
+SELECT * FROM newspaper
+	WHERE MATCH(article) AGAINST('영화 배우' IN BOOLEAN MODE); -- 불린모드 사용시 해당 단어 검색해줌
+	
+-- '영화 배우'가 있는 기사 중 '공포' 의 내용이 꼭 들어간 결과만 검색하고 싶을 경우
+SELECT * FROM newspaper
+	WHERE MATCH(article) AGAINST('영화 배우 +공포' IN BOOLEAN MODE); -- [+찾을단어] 를 추가
+	
+-- '영화 배우'가 있는 기사 중 '남자' 의 내용이 없는 결과만 검색하고 싶을 경우
+SELECT * FROM newspaper
+	WHERE MATCH(article) AGAINST('영화 배우 -남자' IN BOOLEAN MODE); -- [-뺄단어] 를 추가
+```
+
+
+
+### 파티션
+
+- 대량의 테이블을 물리적으로 여러개로 쪼개는 것을 의미
+- 대량의 테이블 이용시 부하를 줄이기 위해 사용함
+
+![32](D:\workspace\00.TIL\SQL\IMAGE\32.png)
+
+```sql
+-- 파티션 분할 예시
+
+CREATE DATABASE IF NOT EXISTS partDB;
+USE partDB;
+DROP TABLE IF EXISTS partTBL;
+-- 파티션 분할을 사용할 테이블 생성
+CREATE TABLE partTBL (
+  userID  CHAR(8) NOT NULL, -- Primary Key로 지정하면 안됨
+  name  VARCHAR(10) NOT NULL,
+  birthYear INT  NOT NULL,
+  addr CHAR(2) NOT NULL )
+-- 파티션 조건 설정
+PARTITION BY RANGE(birthYear) (
+    PARTITION part1 VALUES LESS THAN (1971), -- 1971년생 미만은 PART1
+    PARTITION part2 VALUES LESS THAN (1979), -- 1979년생 미만은 PART2
+    PARTITION part3 VALUES LESS THAN MAXVALUE -- 최대값 미만은 PART3
+);
+INSERT INTO partTBL 
+	SELECT userID, name, birthYear, addr FROM sqlDB.userTbl; -- 값 입력
+
+SELECT * FROM partTBL; -- 조회시 각 파티션별 데이터가 [기본키]순서대로 조회됨
+
+-- 테이블에 파티션 정보 확인하기 위한 쿼리문
+SELECT TABLE_SCHEMA, TABLE_NAME, PARTITION_NAME, PARTITION_ORDINAL_POSITION, TABLE_ROWS
+    FROM INFORMATION_SCHEMA.PARTITIONS
+    WHERE TABLE_NAME =  'parttbl';
+```
+
+![33](D:\workspace\00.TIL\SQL\IMAGE\33.jpg)
+
+```sql
+-- EXPLAIN 실제로 사용한 파티션을 확인하기 위한 쿼리문 
+EXPLAIN  SELECT * FROM partTBL WHERE birthYear <= 1965;
+```
+
+![34](D:\workspace\00.TIL\SQL\IMAGE\34.jpg)
+
+```sql
+-- 파티션 추가 분할
+ALTER TABLE partTBL -- 분할할 테이블 선택
+	REORGANIZE PARTITION part3 INTO (				-- 분할할 파티션 선택
+		PARTITION part3 VALUES LESS THAN (1986),     -- 분할할 기준1
+		PARTITION part4 VALUES LESS THAN MAXVALUE	-- 분할할 기준2
+	);
+OPTIMIZE TABLE partTBL; -- 분할 적용 쿼리
+
+-- 파티션 병합
+ALTER TABLE partTBL -- 합칠 테이블 선택
+	REORGANIZE PARTITION part1, part2 INTO (		-- 합칠 파티션 선택
+		PARTITION part12 VALUES LESS THAN (1979)	-- 파티션 기준 정의
+	);
+OPTIMIZE TABLE partTBL; -- 병합 적용
+
+-- 파티션 삭제
+ALTER TABLE partTBL DROP PARTITION part12; -- DROP PARTITION 삭제할파티션이름
+OPTIMIZE TABLE partTBL;
+# 주의 삭제하면 파티션에 입력된 데이터도 같이 삭제 됨
+```
+
+- 파티션 정리
+  - 범위 가아닌 지역과 같은 것으로도 파티션을 구분할 수 있음
+  - 파티션 테이블에 외래키를 설정할 수 없음 (단독으로 사용되는 테이블에만 파티션 설정 가능)
+  - 스토어드 프로시저, 스토어드 하뭇, 사용자 변수 등을 파티션 함수나 식에 사용할 수 없음
+  - 임시 테이블은 파티션 기능을 사용할 수 없음
+  - 파티션 키에는 일부 함수만 사용할 수 있음
+  - 파티션 개수는 최대 8192개
+  - 레인지 파티션은 숫자형의 연속된 범위를 사용함
+  - 리스트 파티션은 숫자형 또는 문자형의 연속되지 않은 하나하나씩 파티션 키 값을 지정함
+  - 리스트 파티션에는 MAXVALUE를 사용할 수 없음 (모든 경우의 파티션 키 값을 지정해야 함)
+
+
+
+47부터
