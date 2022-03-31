@@ -43,26 +43,30 @@ ex) 완성해야 하는 이름이 세 글자면 AAA, 네 글자면 AAAA
 
 ```python
 def solution(name):
+
+	# 조이스틱 조작 횟수 
     answer = 0
-    min_left_right = len(name) # 왼쪽에서 오른쪽으로만 이동할 때 좌,우 조작 횟수
-    next_idx = 0
-    for idx, char in enumerate(name):
-        # 위, 아래 조작 횟수의 최솟값 구하기
+    
+    # 기본 최소 좌우이동 횟수는 길이 - 1
+    min_move = len(name) - 1
+    
+    for i, char in enumerate(name):
+    	# 해당 알파벳 변경 최솟값 추가
         answer += min(ord(char) - ord('A'), ord('Z') - ord(char) + 1)
         
-        # 좌, 우 조작 횟수의 최솟값 구하기
-        next_idx = idx + 1
-        while next_idx < len(name) and name[next_idx] == 'A':
-            next_idx += 1 # 현재 위치 이후 연속된 A 다음의 문자를 가리킴
+        # 해당 알파벳 다음부터 연속된 A 문자열 찾기
+        next = i + 1
+        while next < len(name) and name[next] == 'A':
+            next += 1
+            
+        # 기존, 연속된 A의 왼쪽시작 방식, 연속된 A의 오른쪽시작 방식 비교 및 갱신
+        min_move = min([min_move, 2 *i + len(name) - next, i + 2 * (len(name) -next)])
         
-        # 한 방향으로만 이동하는 경우와, 오른쪽으로 이동했다가 왼쪽으로 이동하는 경우를 비교
-        min_left_right = min(min_left_right, idx + idx + len(name) - next_idx)
-    answer += min_left_right
+    # 알파벳 변경(상하이동) 횟수에 좌우이동 횟수 추가
+    answer += min_move
     return answer
-
-solution("JEROEN")
 ```
 
 
 
-[(아직 이해가 안됨)참고링크](https://velog.io/@dhelee/%ED%94%84%EB%A1%9C%EA%B7%B8%EB%9E%98%EB%A8%B8%EC%8A%A4-%EC%A1%B0%EC%9D%B4%EC%8A%A4%ED%8B%B1-Python-%ED%83%90%EC%9A%95%EB%B2%95Greedy)
+[(아직 이해가 안됨)참고링크](https://velog.io/@jqdjhy/%ED%94%84%EB%A1%9C%EA%B7%B8%EB%9E%98%EB%A8%B8%EC%8A%A4-%ED%8C%8C%EC%9D%B4%EC%8D%AC-%EC%A1%B0%EC%9D%B4%EC%8A%A4%ED%8B%B1-Greedy)
