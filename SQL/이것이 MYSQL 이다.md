@@ -1448,6 +1448,675 @@ OPTIMIZE TABLE partTBL;
   - 리스트 파티션은 숫자형 또는 문자형의 연속되지 않은 하나하나씩 파티션 키 값을 지정함
   - 리스트 파티션에는 MAXVALUE를 사용할 수 없음 (모든 경우의 파티션 키 값을 지정해야 함)
 
+## 12. PHP 기본 프로그래밍
+
+### 웹사이트 개발환경 구축
+
+- XAMPP 소개
+  - 웹서버의 종류는 다양하지만, 오랫동안 다양한 운영체제에서 작동을 지원하는 아파치(Apache) 웹 서버가 가장 많이 다양한 분야의 웹 사이트에서 사용되고 있음
+  - 데이터베이스는 MySQL이 대부분 사용 되어 왔음
+  - 웹프로그래밍 언어는 PHP가 Apache 및 MySQL과 함께 인기를 얻게 됨
+  - Apache, MySQL, PHP 세 소프트웨어 제작사가 달라 별도로 설치할 경우 소프트웨어 버전에 따른 충돌이나 설정을 사용자가 직접 해야함
+  - 이러한 문제해결을 위해 세 소프트웨어를 함께 묶어 상호호환성이나 충돌 문제를 미리 해결해서 배포하는 소프트웨어가 XAMPP임
+- 서버 스크립트와 클라이언트 스크립트
+
+### HTML 태그
+
+- HTML 태그의 공통적인 특징
+  - HTML 파일의 확장자는 *.htm 또는 *.html
+  - HTML 파일은 텍스트 파일이므로 메모장 등에서 작성한다. 단 웹 브라우저에서 한글이 깨져 보일수 있으므로 인코딩 방식은 UTF-8로 저장
+  - HTML의 태그는 대부분 <> 안에 쓴다.
+  - HTML은 대문자와 소문자를 구분하지 않는다.
+  - HTML 파일은 <HTML> 태그로 시작해서 </HTML> 태그로 종료한다.
+
+```php
+<HTML>
+<HEAD>
+	화면에 표시되지 않는 정보(타이틀, 인코딩 정보 등)
+</HEAD>
+
+<BODY>
+	화면에 보이는 본체(주로 태그들을 표현)
+</BODY>
+</HTML>
+```
+
+### HTML 태그 기본
+
+- <META>
+  - 웹 페이지의 정보를 설정하는데 검색 엔진에게 문서의 내용을 요약해서 보여줌
+  - 웹 페이지의 문자 코딩을 UTF-8로 인식되게 함
+
+```php
+<MEATA http-equiv="content-type" content="text/html; charset=utf-8">
+```
+
+- <BR>
+  - 글자의 줄을 바꿔줌
+  - 결과는 2줄로 출력됨
+
+```php
+안녕하세요? <BR>  MySQL 학습 중 입니다.
+```
+
+- <U>~</U>, <B>~</B>, <I>~</I>
+  - 글자에 밑줄, 굵은 글씨, 이탤릭체의 모양을 지정함
+
+```php
+<U>이건 밑줄</U> <BR>
+<B>이건 굵게</B> <BR>
+<I>이건 이탤릭</I>
+```
+
+- <FONT>~</FONT>
+  - 글자의 크기나 색상을 지정함
+  - 궁서체로 10크기의 빨간색 글자 출력
+
+```php
+<FONT COLOR='RED' SIZE='10' FACE='궁서'> 폰트 변경 </FONT>
+```
+
+- <HR>
+
+  - 수평선을 그어줌 <HR SIZE=’픽셀수’> 는 픽셀 수의 폭으로 선을 그어줌
+
+  ```php
+  <HR SIZE='10'>
+  ```
+
+- <A>~</A>
+
+  - 클릭하면 다른 페이지가 연결되는 링크를 설정함. 주로 herf 속성으로 연결된 홈페이지를 지정
+
+```php
+<A HREF='<http://www.naver.com>' target='_blank'> 네이버 홈페이지 연결 </A>
+```
+
+- <IMG>
+  - 이미지 파일을 화면에 표시함
+
+```jsx
+<IMG src='mouse.png' width=100 height=100>
+```
+
+- <TABLE>~</TABLE>, <TR>~</TR>, <TH>~</TH>, <TD>~</TD>
+  - 표를 만드는 태그들
+  - TABLE 안의 행은 TR로 구성됨
+  - TR 안에 열이 TH, TD로 구성됨
+    - TH는 제목열을 표현해 두꺼운 글씨체로 보임
+    - TD는 일반 열로 표현됨
+
+```jsx
+<TABLE>
+<TR>
+			<TH>아이디</TH>
+			<TH>이름</TH>
+</TR>
+<TR>
+			<TD>BBK</TD>
+			<TD>바비킴</TD>
+</TR>
+<TR>
+			<TD>LSG</TD>
+			<TD>이승기</TD>
+</TR>
+</TABLE>
+```
+
+### PHP 기본 문법
+
+1. 변수와 데이터 형식
+
+- PHP의 기본 구조와 주석
+
+```php
+// PHP 기본 틀
+<?php
+
+?>
+
+// php 주석
+<?php
+// 한 줄 주석용
+/* 
+	여러 줄
+	주석 용
+*/
+?>
+
+// 변수
+$a = 100;
+
+// 변수와 출력 print / echo
+<?php
+
+	$a = 100
+	print $a;
+
+	$b = "안녕하세요? MySQL";
+	echo $b
+
+?>
+```
+
+- PHP의 변수 이름 규칙
+  - 제일 앞에 $가 붙어야 한다
+  - 문자와 숫자, 언더바(_)를 사용할 수 있지만 숫자로 시작할 수 없음.
+
+![35](D:\workspace\00.TIL\SQL\IMAGE\35.PNG)
+
+1. 데이터 형식
+
+- PHP 데이터 형식
+  - 정수 INT
+  - 실수 DOUBLE
+  - 문자열 STRING
+  - 불형 BOOLEAN
+  - 객체 OBJECT
+  - 배열 ARRAY 등이 있음
+
+```php
+<?php
+
+	$a = 123; echo gettype($a), "<br>";
+	$a = 123.123; echo gettype($a), "<br>";
+	$a = "MySQL"; echo gettype($a), "<br>";
+	$a = true; echo gettype($a), "<br>";
+	$a = array( 1, 2, 3 ); echo gettype($a), "<br>";
+
+?>
+```
+
+![36](D:\workspace\00.TIL\SQL\IMAGE\36.png)
+
+- 문자열
+  - 문자열은 큰 따옴표(”) 또는 작은 따옴표(’)로 묶어야 함
+  - 일반적으로는 아무거나 사용가능 하지만 SQL문을 문자열로 지정하기 위해서 큰 따옴표로 묶고, 그 내부에 필요할 경우 작은 따옴표로 묶어주는 방식이 바람직함
+
+![37](D:\workspace\00.TIL\SQL\IMAGE\37.png)
 
 
-47부터
+
+### HTML 과 PHP 관계
+
+- HTML과 PHP 데이터 전송 개념
+
+![38](D:\workspace\00.TIL\SQL\IMAGE\38.png)
+
+```php+HTML
+// send.html 파일
+<HTML>
+<HEAD>
+	<META http-equiv="content-type" content="text/html; charset=utf-8">
+</HEAD>
+<BODY>
+
+<FORM METHOD="post" ACTION="receive.php">
+    아이디 : <INPUT TYPE ="text" NAME="userID">
+    이름 : <INPUT TYPE ="text" NAME="userName">
+    <BR><BR>
+    <INPUT TYPE="submit" VALUE="전송">
+</FORM      
+
+</BODY>
+</HTML>
+        
+// receive.php 파일
+<?php
+        $userID = $_POST(["userID"]);
+        $userNAm = $_POST(["userName"]);
+        
+        echo " 전달 받은 아이디 : ", $userID, "<br>";
+        echo " 전달 받은 이름 : ", $userName, "<br>";
+?>
+```
+
+
+
+- POST와 GET 전달 방식
+  - POST는 정보가 보이지 않는 전달 방식
+  - GET은 정보가 보이는 전달방식
+
+
+
+### HTML과 PHP 혼용
+
+- HTML 문법으로만 구성된 파일의 확장명을 *.php로 저장해 사용해도 상관 없음
+- PHP와 HTML 코드를 석어서 사용해도 상관 없음
+
+### 조건문과 반복문
+
+- IF() 함수
+
+```php+HTML
+// 형식
+if(조건식) {
+	// 참일 때 실행
+} else {
+	// 거짓일 때 실행
+}
+
+// 예시
+<?php
+	$a=100;
+	$b=200;
+
+	if($a > $b) {
+        echo "a가 b보다 큽니다.";
+    } else {
+        echo "a가 b보다 작습니다.";
+    }
+?>
+
+// 여러 개의 조건 if~elseif~else
+<?php
+	$jumsu=83;
+
+	if($jumsu >= 90) {
+        echo "A학점";
+    } elseif($jumsu >= 80) {
+        echo "B학점";
+    } elseif($jumsu >= 70) {
+        echo "C학점";
+    } elseif($jumsu >= 60) {
+        echo "D학점";
+    } else {
+        echo "F학점"
+    }
+?>
+```
+
+
+
+- switch()함수
+  - if~elseif와 비슷하게 switch~case로 여러 조건을 처리할 수 있음
+    - default부분은 생략 가능
+
+```php+HTML
+// 형식
+switch(변수) {
+	case 값1:
+	// 값1이면 이 부분을 처리
+	break;
+	case 값2:
+	// 값2면 이 부분을 처리
+	break;
+	...
+	default:
+	// 아무 것도 해당 안되면 이 부분을 처리
+}
+
+// switch~case 사용 예시
+<?php
+	$jumsu=83;
+	// intval 은 정수형으로 바꿔줌
+	switch(intval($jumsu / 10)) {
+        case 10:
+        case 9:
+            echo "A학점"; break;
+        case 8:
+            echo "B학점"; break;
+        case 7:
+            echo "C학점"; break;
+        case 6:
+            echo "D학점"; break;
+        default:
+            echo "F학점"''
+    }
+?>
+```
+
+
+
+- for() 함수
+  - 지정된 수 만큼 반복하기 위해 사용되는 함수
+
+```php+HTML
+// 형식
+for(초깃값 ; 조건식 ; 증감식) {
+	//  이 부분을 반복함
+}
+
+// 1부터 10까지 출력하도록 활용 예시
+<?php
+	for( $i=1; $i<=10; $i=$i+1) {
+        echo $i, " ";
+    }
+?>
+
+// 123부터 456까지 홀수의 합계 활용 예시
+<?php
+	$hap = 0;	
+
+	for( $i=123; $i<=456; $i=$i+2) {
+        $hap = $hap+$i;
+    }
+
+	echo "123부터 456까지 홀수의 합계 : ", $hap;
+?>
+
+```
+
+
+
+- while() 함수
+  - 조건식만 있음
+
+```php+HTML
+// 형식
+초깃값;
+while(조건식) {
+	// 이 부분을 반복함
+	증감식;
+}
+
+<?php
+	$hap=0;
+	
+	$i=123;
+	while( $i<=456 ) {
+        $hap = $hap +$i;
+        $i=$i+2;
+    }
+
+	echo "123부터 456까지 홀수의 합계 : ", $hap;
+?>
+```
+
+
+
+- 배열
+  - 배열에는 형식이 따로 없음
+
+```php+HTML
+// 형식1 :
+$배열명 = array(값1, 값2, 값3 ...);
+
+// 형식2 :
+$배열명 = range(시작값, 끝값, 증가값);
+
+// 형식3 :
+$배열명[0] = 값1;
+$배열명[1] = 값2;
+$배열명[2] = 값3;
+...
+
+// 배열 예시
+<?php
+  $myArray = array(100, 'MySQL', 123.123);
+  echo $myArray[0], " ", $myArray[1], " ", $myArray[2], "<br>";
+  
+  $myArray = range(1,3);
+  echo $myArray[0], " ", $myArray[1], " ", $myArray[2], "<br>";
+  
+  $myArray = range(1,10,2);
+  echo $myArray[0], " ", $myArray[4], "<br>";
+  
+  $newArray[0] = 'This';
+  $newArray[1] = 'is';
+  $newArray[2] = 'MySQL';
+  echo $newArray[0], " ", $newArray[1], " ", $newArray[2], "<br>";  
+ ?>
+```
+
+![39](D:\workspace\00.TIL\SQL\IMAGE\39.png)
+
+```php+HTML
+// 배열 예시 2 : 1에서 10까지 더하기
+<?php
+  $hap = 0;
+  $myArray = range(1,10); // 1부터 10 배열
+ // (0부터, 10미만, 1씩증가)
+  for($i=0; $i<10; $i++) {
+     $hap = $hap + $myArray[$i];
+  }
+   echo "배열의 합계 : " , $hap;  
+?>
+
+// 배열 예시 3 :
+<?php
+  $myArray = range(1,10);
+  
+  echo "임의로 섞은 값 ==> ";
+  shuffle($myArray); // shuffle 내용을 섞어줌
+  foreach($myArray as $data) // foreach 배열의 데이터를 하나씩 빼서 돌려줌
+	echo $data, " ";
+	
+  echo "<br>오름차순 정렬 ==> ";	
+  sort($myArray);
+  foreach($myArray as $data)
+	echo $data, " ";
+
+  echo "<br>내림차순 정렬 ==> ";	
+  rsort($myArray);
+  foreach($myArray as $data)
+	echo $data, " ";
+  
+  echo "<br>순서를 반대로 ==> ";	
+  $revArray = array_reverse($myArray); //array_reverse 순서 뒤집기
+  foreach($revArray as $data)
+	echo $data, " ";	
+ ?>
+```
+
+![40](D:\workspace\00.TIL\SQL\IMAGE\40.png)
+
+
+
+### PHP의 내장함수
+
+![41](D:\workspace\00.TIL\SQL\IMAGE\41.png)
+
+```php+HTML
+// 다양한 함수의 활용
+<?php
+	// 현재 날짜 연-월-일 로 출력
+   $today = "현재는 ".date("Y-m-j")." 입니다.";
+   echo $today, "<br>";
+   
+	// ARRAY에 최대/최소값 출력 가능
+   $ary = array(100, 50, 200, 7);
+   echo "최대:", max($ary) ," 최소:", min(-123, 50, 999), "<br>";
+   
+	// PI값 출력가능, 반올림, 올림
+   echo pi(), " ", round(M_PI), " ",ceil(M_PI), "<br>";
+   
+	// TRIM 문자열 앞 뒤 공백 제거
+   $str = "   This is MySQL   "; // 앞뒤에 공백 3개씩.
+   $str = trim($str);
+   echo "#", $str, "#", "<br>";
+   
+	// 문자열 길이 반환
+   echo "문자열 길이:", strlen($str), "<br>";
+   
+	//문자열 횟수 만큼 반복
+   echo str_repeat("-", 30), "<br>";
+   				  // OLD, NEW, TARGET : OLD 에서 NEW로 타겟 문자열의 값을 바꿔줌
+   echo str_replace( "MySQL", "마이에스큐엘", "This is MySQL"), "<br>";
+   
+   $ary = str_split("This is MySQL", 3); // 문자열을 길이만큼 잘라 배열로 분리 함
+   print_r($ary); echo "<br>"; // 배열을 출력한다.
+   echo "<br>";
+   
+	// 배열을 만듬(구분자, 배열로 만들 값)
+   $ary = explode(" ", "This is MySQL");
+   print_r($ary); echo "<br>";// 배열을 출력한다.
+   
+	// 배열을 문자열로 만듬(ARRAY, 구분자)
+   echo implode($ary, " "), "<br>";
+   
+   $myHTML = "<A href='www.hanbit.co.kr'> 한빛미디어 </A> <br>";
+   echo $myHTML;
+   echo htmlspecialchars($myHTML);  // HTML 을 그대로 그냥 출력하려고 할 경우
+ ?>
+```
+
+![42](D:\workspace\00.TIL\SQL\IMAGE\42.png)
+
+### [그 외 함수 참고 사이트](http://docs.php.net/manual/kr/)
+
+- php 주요 MySQL 관련 함수
+
+![43](D:\workspace\00.TIL\SQL\IMAGE\43.png)
+
+
+
+## 13. PHP와 MySQL의 연동
+
+1. db 접속
+
+```php+HTML
+<?php
+   $db_host="localhost";
+   $db_user="root";
+   $db_password="0000";
+   $db_name="";
+   $con=mysqli_connect($db_host, $db_user, $db_password, $db_name);
+   if ( mysqli_connect_error($con) ) {
+	   echo "MySQL 접속 실패 !!", "<br>";
+	   echo "오류 원인 : ", mysqli_connect_error();
+	   exit();
+   }
+   echo "MySQL 접속 완전히 성공!!";
+   mysqli_close($con);
+?>
+
+// 좀더 간단히 접속
+<?php
+   $con=mysqli_connect("localhost", "root", "0000", "") or die("MySQL 접속 실패 !!");
+   echo "MySQL 접속 완전히 성공!!";
+   mysqli_close($con);
+?>
+
+// 데이터 베이스 생성
+<?php
+   $con=mysqli_connect("localhost", "root", "0000", "") or die("MySQL 접속 실패 !!");
+         
+   $sql="CREATE DATABASE sqlDB"; // 쿼리문을 작성해서 변수에 넣고
+   $ret = mysqli_query($con, $sql); // mysqli_query 로 쿼리문을 날려준뒤 ret으로 받아줌
+
+	// ret은 정상적으로 실행되면 True, 실행되지 않으면 False   
+   if($ret) {
+	   echo "sqlDB가 성공적으로 생성됨.";
+   }
+   else {
+	   echo "sqlDB 생성 실패!!!"."<br>";
+	   echo "실패 원인 :".mysqli_error($con);
+   }
+   
+   mysqli_close($con);
+?>
+
+// 테이블 생성
+<?php
+   $con=mysqli_connect("localhost", "root", "0000", "sqlDB") or die("MySQL 접속 실패 !!");
+
+   $sql ="
+	   CREATE TABLE userTbl 
+		( userID  	CHAR(8) NOT NULL PRIMARY KEY,
+		  name    	VARCHAR(10) NOT NULL,
+		  birthYear   INT NOT NULL,
+		  addr	  	CHAR(2) NOT NULL,
+		  mobile1	CHAR(3),
+		  mobile2	CHAR(8),
+		  height    	SMALLINT,
+		  mDate    	DATE
+		)
+   ";
+ 
+   $ret = mysqli_query($con, $sql);
+ 
+   if($ret) {
+	   echo "userTBL이 성공적으로 생성됨..";
+   }
+   else {
+	   echo "userTBL 생성 실패!!!"."<br>";
+	   echo "실패 원인 :".mysqli_error($con);
+   }
+ 
+   mysqli_close($con);
+?>
+
+// insert 
+<?php
+   $con=mysqli_connect("localhost", "root", "0000", "sqlDB") or die("MySQL 접속 실패 !!");
+
+   $sql ="
+		INSERT INTO userTbl VALUES
+		('LSG', '이승기', 1987, '서울', '011', '1111111', 182, '2008-8-8'),
+		('KBS', '김범수', 1979, '경남', '011', '2222222', 173, '2012-4-4'),
+		('KKH', '김경호', 1971, '전남', '019', '3333333', 177, '2007-7-7'),
+		('JYP', '조용필', 1950, '경기', '011', '4444444', 166, '2009-4-4'),
+		('SSK', '성시경', 1979, '서울', NULL  , NULL      , 186, '2013-12-12'),
+		('LJB', '임재범', 1963, '서울', '016', '6666666', 182, '2009-9-9'),
+		('YJS', '윤종신', 1969, '경남', NULL  , NULL      , 170, '2005-5-5'),
+		('EJW', '은지원', 1972, '경북', '011', '8888888', 174, '2014-3-3'),
+		('JKW', '조관우', 1965, '경기', '018', '9999999', 172, '2010-10-10'),
+		('BBK', '바비킴', 1973, '서울', '010', '0000000', 176, '2013-5-5')
+   ";
+ 
+   $ret = mysqli_query($con, $sql);
+ 
+   if($ret) {
+	   echo "userTBL이 데이터가 성공적으로 입력됨.";
+   }
+   else {
+	   echo "userTBL 데이터 입력 실패!!!"."<br>";
+	   echo "실패 원인 :".mysqli_error($con);
+   }
+ 
+   mysqli_close($con);
+?>
+
+// select
+<?php
+   $con=mysqli_connect("localhost", "root", "0000", "sqlDB") or die("MySQL 접속 실패 !!");
+
+   $sql ="
+		SELECT * FROM userTBL
+   ";
+ 
+   $ret = mysqli_query($con, $sql);
+ 
+   if($ret) {
+	   echo mysqli_num_rows($ret), "건이 조회됨.<br><br>";
+   }
+   else {
+	   echo "userTBL 데이터 조회 실패!!!"."<br>";
+	   echo "실패 원인 :".mysqli_error($con);
+	   exit();
+   }
+   
+   while($row = mysqli_fetch_array($ret)) {
+	   echo $row['userID'], " ", $row['name'], " ", $row['height'], " ", "<br>";
+   }   
+ 
+   mysqli_close($con);
+?>
+
+```
+
+
+
+- 회원관리 시스템
+
+![44](D:\workspace\00.TIL\SQL\IMAGE\44.png)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
