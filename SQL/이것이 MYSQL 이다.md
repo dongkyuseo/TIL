@@ -2102,6 +2102,385 @@ $배열명[2] = 값3;
 
 ![44](D:\workspace\00.TIL\SQL\IMAGE\44.png)
 
+```php+HTML
+// 회원 관리 시스템 메인 화면 (main.html)
+<HTML>
+<HEAD>
+<META http-equiv="content-type" content="text/html; charset=utf-8">
+</HEAD>
+<BODY>
+
+<h1> 회원 관리 시스템 </h1>
+
+<a href='select.php'> (1) 회원 조회 (조회 후 수정/삭제 가능) </a> <br><br>
+<a href='insert.php'> (2) 신규 회원 등록 </a> <br><br>
+<FORM METHOD="get"  ACTION="update.php">
+	(3) 회원 수정 - 회원 아이디 : <INPUT TYPE ="text" NAME="userID"> 
+	<INPUT TYPE="submit"  VALUE="수정">
+</FORM>
+<FORM METHOD="get"  ACTION="delete.php">
+	(4) 회원 삭제 - 회원 아이디 : <INPUT TYPE ="text" NAME="userID"> 
+	<INPUT TYPE="submit"  VALUE="삭제">
+</FORM>
+
+</BODY>
+</HTML>
+    
+// select.php
+<?php
+   $con=mysqli_connect("localhost", "root", "0000", "sqlDB") or die("MySQL 접속 실패 !!");
+
+   $sql ="SELECT * FROM userTBL";
+ 
+   $ret = mysqli_query($con, $sql);   
+   if($ret) {
+	   //echo mysqli_num_rows($ret), "건이 조회됨..<br><br>";
+	   $count = mysqli_num_rows($ret);
+   }
+   else {
+	   echo "userTBL 데이터 조회 실패!!!"."<br>";
+	   echo "실패 원인 :".mysqli_error($con);
+	   exit();
+   } // 오류일 경우
+   // 회원 조회 결과 테이블 생성
+   echo "<h1> 회원 조회 결과 </h1>";
+   echo "<TABLE border=1>";
+   echo "<TR>";
+   echo "<TH>아이디</TH><TH>이름</TH><TH>출생년도</TH><TH>지역</TH><TH>극번</TH>";
+   echo "<TH>전화번호</TH><TH>키</TH><TH>가입일</TH><TH>수정</TH><TH>삭제</TH>";
+   echo "</TR>";
+   // 값을 한행씩 가져오는 쿼리
+   while($row = mysqli_fetch_array($ret)) {
+	  echo "<TR>";
+	  echo "<TD>", $row['userID'], "</TD>";
+	  echo "<TD>", $row['name'], "</TD>";
+	  echo "<TD>", $row['birthYear'], "</TD>";
+	  echo "<TD>", $row['addr'], "</TD>";
+	  echo "<TD>", $row['mobile1'], "</TD>";
+	  echo "<TD>", $row['mobile2'], "</TD>";
+	  echo "<TD>", $row['height'], "</TD>";
+	  echo "<TD>", $row['mDate'], "</TD>";
+	  echo "<TD>", "<a href='update.php?userID=", $row['userID'], "'>수정</a></TD>";
+	  echo "<TD>", "<a href='delete.php?userID=", $row['userID'], "'>삭제</a></TD>";
+	  echo "</TR>";	  
+   }   
+   mysqli_close($con);
+   echo "</TABLE>"; 
+   echo "<br> <a href='main.html'> <--초기 화면</a> ";
+?>
+
+// insert.php
+<HTML>
+<HEAD>
+<META http-equiv="content-type" content="text/html; charset=utf-8">
+</HEAD>
+<BODY>
+
+<h1> 신규 회원 입력 </h1>
+<FORM METHOD="post"  ACTION="insert_result.php">
+	아이디 : <INPUT TYPE ="text" NAME="userID"> <br>
+	이름 : <INPUT TYPE ="text" NAME="name"> <br> 
+	출생년도 : <INPUT TYPE ="text" NAME="birthYear"> <br>
+	지역 : <INPUT TYPE ="text" NAME="addr"> <br>
+	휴대폰 국번 : <INPUT TYPE ="text" NAME="mobile1"> <br>
+	휴대폰 전화번호 : <INPUT TYPE ="text" NAME="mobile2"> <br>
+	신장 : <INPUT TYPE ="text" NAME="height"><br>
+	<BR><BR>
+	<INPUT TYPE="submit"  VALUE="회원 입력">
+</FORM>
+
+</BODY>
+</HTML>
+
+// insert_result.php
+<?php
+   $con=mysqli_connect("localhost", "root", "0000", "sqlDB") or die("MySQL 접속 실패 !!");
+
+   $userID = $_POST["userID"];
+   $name = $_POST["name"];
+   $birthYear = $_POST["birthYear"];
+   $addr = $_POST["addr"];
+   $mobile1 = $_POST["mobile1"];
+   $mobile2 = $_POST["mobile2"];
+   $height = $_POST["height"];   
+   $mDate = date("Y-m-j");
+   
+   $sql =" INSERT INTO userTbl VALUES('".$userID."','".$name."',".$birthYear;
+   $sql = $sql.",'".$addr."','".$mobile1."','".$mobile2."',".$height.",'".$mDate."')";
+   
+   $ret = mysqli_query($con, $sql);
+ 
+    echo "<h1> 신규 회원 입력 결과 </h1>";
+   if($ret) {
+	   echo "데이터가 성공적으로 입력됨.";
+   }
+   else {
+	   echo "데이터 입력 실패!!!"."<br>";
+	   echo "실패 원인 :".mysqli_error($con);
+   } 
+   mysqli_close($con);
+   
+   echo "<br> <a href='main.html'> <--초기 화면</a> ";
+?>
+
+// update.php
+<?php
+   $con=mysqli_connect("localhost", "root", "0000", "sqlDB") or die("MySQL 접속 실패 !!");
+   $sql ="SELECT * FROM userTBL WHERE userID='".$_GET['userID']."'";
+
+   $ret = mysqli_query($con, $sql);   
+   if($ret) {
+	   $count = mysqli_num_rows($ret);
+	   if ($count==0) {
+		   echo $_GET['userID']." 아이디의 회원이 없음!!!"."<br>";
+		   echo "<br> <a href='main.html'> <--초기 화면</a> ";
+		   exit();	
+	   }		   
+   }
+   else {
+	   echo "데이터 조회 실패!!!"."<br>";
+	   echo "실패 원인 :".mysqli_error($con);
+	   echo "<br> <a href='main.html'> <--초기 화면</a> ";
+	   exit();
+   }   
+   $row = mysqli_fetch_array($ret);
+   $userID = $row['userID'];
+   $name = $row["name"];
+   $birthYear = $row["birthYear"];
+   $addr = $row["addr"];
+   $mobile1 = $row["mobile1"];
+   $mobile2 = $row["mobile2"];
+   $height = $row["height"];   
+   $mDate = $row["mDate"];      
+?>
+
+<HTML>
+<HEAD>
+<META http-equiv="content-type" content="text/html; charset=utf-8">
+</HEAD>
+<BODY>
+
+<h1> 회원 정보 수정 </h1>
+<FORM METHOD="post"  ACTION="update_result.php">
+	아이디 : <INPUT TYPE ="text" NAME="userID" VALUE=<?php echo $userID ?> READONLY> <br> 
+    														// READONLY 읽기 전용
+	이름 : <INPUT TYPE ="text" NAME="name" VALUE=<?php echo $name ?>> <br> 
+	출생년도 : <INPUT TYPE ="text" NAME="birthYear" VALUE=<?php echo $birthYear ?>> <br>
+	지역 : <INPUT TYPE ="text" NAME="addr" VALUE=<?php echo $addr ?>> <br>
+	휴대폰 국번 : <INPUT TYPE ="text" NAME="mobile1" VALUE=<?php echo $mobile1 ?>> <br>
+	휴대폰 전화번호 : <INPUT TYPE ="text" NAME="mobile2" VALUE=<?php echo $mobile2 ?>> <br>
+	신장 : <INPUT TYPE ="text" NAME="height" VALUE=<?php echo $height ?>> <br>
+	회원가입일 : <INPUT TYPE ="text" NAME="mDate" VALUE=<?php echo $mDate ?> READONLY><br>
+	<BR><BR>
+	<INPUT TYPE="submit"  VALUE="정보 수정">
+</FORM>
+
+</BODY>
+</HTML>
+    
+// delete.php
+<?php
+   $con=mysqli_connect("localhost", "root", "0000", "sqlDB") or die("MySQL 접속 실패 !!");
+   $sql ="SELECT * FROM userTBL WHERE userID='".$_GET['userID']."'";
+
+   $ret = mysqli_query($con, $sql);   
+   if($ret) {
+	   $count = mysqli_num_rows($ret);
+	   if ($count==0) {
+		   echo $_GET['userID']." 아이디의 회원이 없음!!!"."<br>";
+		   echo "<br> <a href='main.html'> <--초기 화면</a> ";
+		   exit();	
+	   }		   
+   }
+   else {
+	   echo "데이터 조회 실패!!!"."<br>";
+	   echo "실패 원인 :".mysqli_error($con);
+	   echo "<br> <a href='main.html'> <--초기 화면</a> ";
+	   exit();
+   }   
+   $row = mysqli_fetch_array($ret);
+   $userID = $row['userID'];
+   $name = $row["name"];
+   
+?>
+
+<HTML>
+<HEAD>
+<META http-equiv="content-type" content="text/html; charset=utf-8">
+</HEAD>
+<BODY>
+
+<h1> 회원 삭제 </h1>
+<FORM METHOD="post"  ACTION="delete_result.php">
+	아이디 : <INPUT TYPE ="text" NAME="userID" VALUE=<?php echo $userID ?> READONLY> <br>
+	이름 : <INPUT TYPE ="text" NAME="name" VALUE=<?php echo $name ?> READONLY> <br> 
+	<BR><BR>
+	위 회원을 삭제하겠습니까?	
+	<INPUT TYPE="submit"  VALUE="회원 삭제">
+</FORM>
+
+</BODY>
+</HTML>
+    
+// delete_result.php
+<?php
+   $con=mysqli_connect("localhost", "root", "0000", "sqlDB") or die("MySQL 접속 실패 !!");
+
+   $userID = $_POST["userID"];
+     
+   $sql ="DELETE FROM userTbl WHERE userID='".$userID."'";
+   
+   $ret = mysqli_query($con, $sql);
+ 
+    echo "<h1> 회원 삭제 결과 </h1>";
+   if($ret) {
+	   echo $userID." 회원이 성공적으로 삭제됨..";
+   }
+   else {
+	   echo "데이터 삭제 실패!!!"."<br>";
+	   echo "실패 원인 :".mysqli_error($con);
+   } 
+   mysqli_close($con);
+   
+   echo "<br><br> <a href='main.html'> <--초기 화면</a> ";
+?>
+
+```
+
+
+
+## 14. MySQL과 공간데이터
+
+### 지리정보시스템의 개념(GIS; Geographical Information System )
+
+- 구글맵, 카카오맵, 자동차 네비게이션 등 과 같은 것
+- GIS 응용프로그램은 속성 데이터(DBMS) + 공간 데이터(파일) 로 이루어져 있었음
+
+![45](D:\workspace\00.TIL\SQL\IMAGE\45.png)
+
+- MySQL 5.0 부터 공간 데이터를 저장할 수 있는 새로운 공간 데이터 형식을 지원해 진정한 속성 데이터와 공간데이터의 '통합'을 지원하게 됨
+
+### 공간 데이터의 기본 개념
+
+- MySQL 5.0 부터 Geometry 데이터 형식 지원함
+- 공간  데이터는 쉽게 지구상에 존재하는 지형정보를 표현한 데이터
+- 공간 데이터는 주로 점, 선, 면이라는 3개의 개체로 표현됨
+
+![46](D:\workspace\00.TIL\SQL\IMAGE\46.png)
+
+```sql
+-- 공간 데이터 입력 예시
+CREATE TABLE StreamTbl (
+   MapNumber CHAR(10),  -- 지도일련번호
+   StreamName CHAR(20),  -- 하천이름
+   Stream GEOMETRY ); -- 공간데이터(하천개체)
+
+INSERT INTO StreamTbl VALUES ( '330000001' ,  '한류천', 
+	ST_GeomFromText('LINESTRING (-10 30, -50 70, 50 70)'));
+```
+
+### 실습
+
+```sql
+DROP DATABASE IF EXISTS GisDB;
+CREATE DATABASE GisDB;
+
+USE GisDB;
+CREATE TABLE StreamTbl (
+   MapNumber CHAR(10),  -- 지도일련번호
+   StreamName CHAR(20),  -- 하천이름
+   Stream GEOMETRY ); -- 공간데이터(하천개체)
+
+INSERT INTO StreamTbl VALUES ( '330000001' ,  '한류천', 
+	ST_GeomFromText('LINESTRING (-10 30, -50 70, 50 70)'));
+INSERT INTO StreamTbl VALUES ( '330000001' ,  '안양천', 
+	ST_GeomFromText('LINESTRING (-50 -70, 30 -10, 70 -10)'));
+INSERT INTO StreamTbl VALUES ('330000002' ,  '일산천', 
+	ST_GeomFromText('LINESTRING (-70 50, -30 -30, 30 -60)'));
+
+CREATE TABLE BuildingTbl (
+   MapNumber CHAR(10),  -- 지도일련번호
+   BuildingName CHAR(20),  -- 건물이름
+   Building GEOMETRY ); -- 공간데이터(건물개체)
+   
+INSERT INTO BuildingTbl VALUES ('330000005' ,  '하나은행', 
+	ST_GeomFromText('POLYGON ((-10 50, 10 30, -10 10, -30 30, -10 50))'));
+INSERT INTO BuildingTbl VALUES ( '330000001' ,  '우리빌딩', 
+	ST_GeomFromText('POLYGON ((-50 -70, -40 -70, -40 -80, -50 -80, -50 -70))'));
+INSERT INTO BuildingTbl VALUES ( '330000002' ,  '디티오피스텔', 
+	ST_GeomFromText('POLYGON ((40 0, 60 0, 60 -20, 40 -20, 40 0))'));
+
+SELECT * FROM StreamTbl;
+
+SELECT * FROM BuildingTbl;
+
+SELECT * FROM StreamTbl WHERE ST_Length(Stream) > 140 ;
+
+SELECT BuildingName, ST_AREA(Building) FROM BuildingTbl 
+	WHERE ST_AREA(Building) < 500;
+    
+SELECT * FROM StreamTbl
+UNION ALL
+SELECT * FROM BuildingTbl;
+```
+
+![47](D:\workspace\00.TIL\SQL\IMAGE\47.png)
+
+### 공간 데이터 형식의 함수
+
+| 함수명            | 설명                                                 | 비고                          |
+| ----------------- | ---------------------------------------------------- | ----------------------------- |
+| ST_GeomFromText() | 문자열을 Geometry 형식으로 변환함                    | Point, LineString, Polygon 등 |
+| ST_AsText()       | Geometry 형식을 문자열 형식으로 변환함               | Point, LineString, Polygon 등 |
+| ST_Length()       | LineString의 길이를 구함                             |                               |
+| ST_Area()         | Polygon의 면적을 구함                                |                               |
+| ST_Intersects()   | 두 도형의 교차 여부를 확인함                         | 0: 교차 안 함, 1: 교차함      |
+| ST_Buffer()       | 도형에서부터 주어진 거리만큼 떨어진 좌표 집합을 구함 |                               |
+| ST_Contains()     | 한 도형 안에 다른 도형이 들어 있는지 확인함          | 0: 포함 안 함, 1: 포함함      |
+| ST_Distance()     | 두 도형 사이의 거리를 구함                           |                               |
+| ST_Union          | 두 도형을 합한 결과 좌표 집합을 구함                 |                               |
+| ST_Intersection() | 두 도형이 교차하는 좌표 집합을 구함                  |                               |
+
+![48](D:\workspace\00.TIL\SQL\IMAGE\48.png)
+
+- 안양천 하천에 걸치는 건물 추출해보기
+
+```sql
+SELECT StreamName, BuildingName, Building, Stream
+   FROM BuildingTbl , StreamTbl 
+   WHERE ST_Intersects(Building, Stream) = 1   AND StreamName = '안양천';
+-- 겹치는 건물을 볼 수 있음
+
+-- 직선의 두께를 5로 바꿔서 출력 (강을 표현할때 좀더 두껍게 표현하기)
+SELECT ST_Buffer(Stream,5) FROM StreamTbl;
+```
+
+![49](D:\workspace\00.TIL\SQL\IMAGE\49.png)
+
+
+
+### MySQL에서 진행하는 GIS 응용 프로젝트
+
+- 짬뽕 체인점 본사에서 GIS 데이터를 활용해 서울의 체인점을 관리하는 상황을 가정
+
+![50](D:\workspace\00.TIL\SQL\IMAGE\50.png)
+
+## 15. 파이썬과 MySQL 응용 프로그래밍
+
+- 실습 기반이라 동영상 참고
+
+
+
+끝.
+
+
+
+
+
+
+
+
+
 
 
 
