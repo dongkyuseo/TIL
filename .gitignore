@@ -12,6 +12,7 @@ image/
 data/
 dataset/
 예제/
+실습예제/
 
 # C extensions
 *.so
